@@ -1,0 +1,835 @@
+@page
+@model PlaniModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Planificación Nuevo Ingreso";
+}
+
+
+<link rel="stylesheet" href="~/css/Plani.css">
+<link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+<body>
+    @Html.AntiForgeryToken()
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo">
+                    @((User.Identity?.Name != null && User.Identity.Name.Length > 0) 
+                        ? User.Identity.Name.Substring(0, 1).ToUpper() 
+                        : "")
+                </div>
+                <div class="logo-text">
+                    <div class="logo-title">Esval/ADV</div>
+                    <div class="logo-subtitle">
+                        Recursos Humanos
+                        <br>
+                        <span style="font-size: 0.85em; color: var(--secondary-blue); font-weight: 500;">
+                            @User.Identity?.Name
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn">
+                <i class='bx bx-chevron-left' id="toggleIcon"></i>
+            </button>
+        </div>
+
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/index" class="nav-link">
+                        <i class='bx bx-home-alt nav-icon'></i>
+                        <span class="nav-text">Inicio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PreInducciones/index_PRE" class="nav-link active">
+                        <i class='bx bx-book-open nav-icon'></i>
+                        <span class="nav-text">Inducciones</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PostInducciones/index_POST" class="nav-link">
+                        <i class='bx bx-user-check nav-icon'></i>
+                        <span class="nav-text">Post Inducciones</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="mode-toggle">
+                <div class="mode-info">
+                    <i class='bx bx-moon nav-icon' id="modeIcon"></i>
+                    <span class="nav-text" id="modeText">Modo Oscuro</span>
+                </div>
+                <div class="toggle-switch" id="darkModeToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+
+            @if (Model.EsAdmin)
+            {
+                <a href="/PreInducciones/Utilidades_PRE/Configuracion_PRE" class="config-link">
+                    <i class='bx bx-cog nav-icon'></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+                
+                <div class="notifications-indicator @(Model.SolicitudesPendientes > 0 ? "has-notifications" : "")">
+                    <i class='bx bx-notification nav-icon'></i>
+                    <span class="nav-text">Notificaciones</span>
+                    @if (Model.SolicitudesPendientes > 0)
+                    {
+                        <span class="notification-badge">@Model.SolicitudesPendientes</span>
+                    }
+                    <span class="tooltip">
+                        @if (Model.SolicitudesPendientes > 0)
+                        {
+                            <text>@Model.SolicitudesPendientes notificación@(Model.SolicitudesPendientes == 1 ? "" : "es") pendiente@(Model.SolicitudesPendientes == 1 ? "" : "s")</text>
+                        }
+                        else
+                        {
+                            <text>Sin notificaciones</text>
+                        }
+                    </span>
+                </div>
+            }
+
+            <a href="/Login/logout" class="logout-link">
+                <i class='bx bx-log-out nav-icon'></i>
+                <span class="nav-text">Salir</span>
+            </a>
+        </div>
+    </aside>
+
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class='bx bx-menu' id="menuIcon"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="content-wrapper">
+            <div class="form-container">
+                <!-- Form Header -->
+                <div class="form-header">
+                    <h1 class="form-title">
+                        <i class='bx bx-user-plus'></i>
+                        Formulario de Inducción Corporativa
+                    </h1>
+                </div>
+
+                <div class="form-content">
+                    <!-- Main Form -->
+                    <form method="POST" class="form-main">
+                        
+    <!-- AGREGAR MENSAJES DE ERROR Y ÉXITO -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" style="margin-bottom: 1rem; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 8px; color: #ef4444;">
+            <i class='bx bx-error-circle' style="margin-right: 0.5rem;"></i>
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success" style="margin-bottom: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; color: #10b981;">
+            <i class='bx bx-check-circle' style="margin-right: 0.5rem;"></i>
+            @TempData["Message"]
+        </div>
+    }
+
+    @if (ViewData["Error"] != null)
+    {
+        <div class="alert alert-warning" style="margin-bottom: 1rem; padding: 1rem; background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; border-radius: 8px; color: #f59e0b;">
+            <i class='bx bx-error' style="margin-right: 0.5rem;"></i>
+            @ViewData["Error"]
+        </div>
+    }
+                        <div class="form-grid">
+                            <div class="form-column">
+                                <!-- Datos de la Inducción -->
+                                <div class="form-section">
+                                    <h3 class="form-section-title">Datos de la Inducción</h3>
+
+                                    <!-- Analista -->
+<div class="form-group">
+    <label class="required-field">Analista Entrevista Experiencia:</label>
+    <div class="custom-select-container">
+        <input type="text" 
+               name="Analista" 
+               id="analista-select" 
+               class="custom-select-input" 
+               placeholder="Buscar o seleccionar analista..."
+               autocomplete="off" 
+               required />
+        <div class="custom-select-dropdown" id="analistaDropdown">
+            @foreach (var analista in Model.Analistas)
+            {
+                <div class="custom-select-option" data-value="@analista.Nombre_ANA">
+                    <i class='bx bx-user'></i>
+                    @analista.Nombre_ANA
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+                                    <div class="form-group">
+                                        <label class="required-field" id="fecha-induccion-label">Fecha de Inducción:</label>
+                                        <input type="date" name="Fecha_Induccion" id="fecha-induccion" required />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field" id="fecha-ingreso-label">Fecha de Ingreso:</label>
+                                        <input type="date" name="Fecha_Ingreso" id="fecha-ingreso" required />
+                                    </div>
+                                </div>
+
+                                <!-- Datos Personales -->
+                                <div class="form-section">
+                                    <h3 class="form-section-title">Datos Personales</h3>
+
+                                    <div class="form-group">
+                                        <label class="required-field">RUT:</label>
+                                        <input type="text" name="RUT" id="rut" placeholder="00.000.000-K" maxlength="15"
+                                            required onblur="formatRUT(); validarRUT();" />
+                                        <span id="rut-error" class="error-message">RUT INVÁLIDO</span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Nombre:</label>
+                                        <input type="text" id="Nombre" name="Nombre" placeholder="Ingrese Nombre" required
+                                            onblur="capitalizeFirstLetter(this)" />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Apellido Paterno:</label>
+                                        <input type="text" id="Apellido_Paterno" name="Apellido_Paterno"
+                                            placeholder="Ingrese Apellido" required onblur="capitalizeFirstLetter(this)" required />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Apellido Materno:</label>
+                                        <input type="text" name="Apellido_Materno" placeholder="Ingrese Apellido" 
+                                            onblur="capitalizeFirstLetter(this)" id="Apellido_Materno" />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Fecha de Nacimiento:</label>
+                                        <input type="date" name="fecha_nacimiento" id="Fecha_Nacimiento"  />
+                                    </div>
+                                </div>
+
+                                <!-- Información de Contacto -->
+                                <div class="form-section">
+                                    <h3 class="form-section-title">Información de Contacto</h3>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Correo:</label>
+                                        <input type="email" name="Correo" id="Correo" placeholder="Ingrese Correo" required />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Número de Teléfono:</label>
+                                        <input type="tel" name="telefono" id="Telefono" placeholder="+569XXXXXXXX" required
+                                            onblur="formatTelefono()" />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Dirección Personal:</label>
+                                        <input type="text" name="Direccion" id="Direccion" placeholder="Ingrese Dirección" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-column">
+                                <!-- Información Laboral -->
+                                <div class="form-section">
+                                    <h3 class="form-section-title">Información Laboral</h3>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Sociedad:</label>
+                                        <select name="sociedad" required>
+                                            <option value="" disabled selected>Seleccione</option>
+                                            @foreach (var soc in Model.Sociedades)
+                                            {
+                                                <option value="@soc.Nombre_SOC">@soc.Nombre_SOC</option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Cargo:</label>
+                                        <input type="text" name="Cargo" placeholder="Ingrese Cargo" required />
+                                    </div>
+
+                                <!-- Gerencia -->
+<div class="form-group">
+    <label class="required-field">Gerencia:</label>
+    <div class="custom-select-container">
+        <input type="text" 
+               name="Gerencia" 
+               id="gerencia-select" 
+               class="custom-select-input" 
+               placeholder="Buscar o seleccionar gerencia..."
+               autocomplete="off" 
+               required />
+        <div class="custom-select-dropdown" id="gerenciaDropdown">
+            @foreach (var ger in Model.Gerencias)
+            {
+                <div class="custom-select-option" data-value="@ger.Nombre_GER">
+                    <i class='bx bx-buildings'></i>
+                    @ger.Nombre_GER
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+                            <!-- Ubicación- -->
+                    <div class="form-group">
+                        <label class="required-field">Ubicación:</label>
+                        <div class="custom-select-container">
+                            <input type="text" 
+                                name="Ubicacion" 
+                                id="ubicacion-select" 
+                                class="custom-select-input" 
+                                placeholder="Buscar o seleccionar ubicación..."
+                                autocomplete="off" 
+                                required />
+                            <div class="custom-select-dropdown" id="ubicacionDropdown">
+                                @foreach (var ubi in Model.Ubicaciones)
+                                {
+                                    <div class="custom-select-option" data-value="@ubi.Nombre_UBI">
+                                        <i class='bx bx-map'></i>
+                                        @ubi.Nombre_UBI
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Jefe Directo:</label>
+                                        <input type="text" name="Jefe_Directo" placeholder="Ingrese Nombre del Jefe Directo" required />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Correo de Jefatura:</label>
+                                        <input type="email" name="Gerencia_mail" placeholder="Ingrese Correo de Jefatura" required />
+                                    </div>
+                                </div>
+
+                                <!-- Información de Contrato -->
+                                <div class="form-section">
+                                    <h3 class="form-section-title">Información de Contrato</h3>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Motivo de Contratación:</label>
+                                        <select name="Tipo_de_Contrato" id="tipo-contrato" onchange="setContratoIndefinido()" required>
+                                            <option value="" disabled selected>Seleccione</option>
+                                            <option value="Reposición">Reposición</option>
+                                            <option value="Expansión">Expansión</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field">A que Personal repone?</label>
+                                        <input type="text" name="Quienrepone" id="Quienrepone" placeholder="Coloque a quien repone" disabled />
+                                        <!-- Campo oculto como respaldo -->
+                                        <input type="hidden" name="QuienreponeBackup" id="QuienreponeBackup" value="" />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Tiempo de Contratación:</label>
+                                        <input type="text" name="contrato" id="contrato" placeholder="Tiempo de Contratación" required />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="required-field">Ticket:</label>
+                                        <input type="text" name="ticket" placeholder="Ingrese Ticket" required />
+                                    </div>
+                                </div>
+
+                                <!-- Formación Académica -->
+                                <div class="form-section">
+                                    <h3 class="form-section-title">Formación Académica</h3>
+
+                                    <div class="form-group">
+                                        <label>Carrera:</label>
+                                        <input type="text" name="Carrera" placeholder="Ingrese historial académico" />
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Universidad:</label>
+                                        <input type="text" name="Universidad" placeholder="Ingrese Institución Educativa" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-buttons">
+                            <input type="submit" value="💾 Registrar Empleado" />
+                        </div>
+
+                        <!-- RUT Duplicado Message -->
+                        <div id="rut-duplicado"></div>
+                    </form>
+
+                    <!-- Navigation Buttons -->
+                    <div class="form-buttons" style="margin-top: 1rem; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+                        <a href="/PreInducciones/index_PRE" class="boton-estilizado">
+                            <i class='bx bx-arrow-back'></i>
+                            Volver Atrás
+                        </a>
+                        <a href="/PreInducciones/DatosyCorreos/DatosyCorreos" class="boton-estilizado">
+                            <i class='bx bx-table'></i>
+                            Ver datos subidos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script>
+    // Sidebar functionality - Copiado exactamente del diseño anterior
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const toggleIcon = document.getElementById('toggleIcon');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const menuIcon = document.getElementById('menuIcon');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const modeIcon = document.getElementById('modeIcon');
+    const modeText = document.getElementById('modeText');
+    const body = document.body;
+
+    let sidebarOpen = false;
+    let sidebarCollapsed = false;
+    let darkMode = false;
+
+    function toggleSidebarCollapse() {
+        sidebarCollapsed = !sidebarCollapsed;
+        
+        if (sidebarCollapsed) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('sidebar-collapsed');
+        } else {
+            sidebar.classList.remove('collapsed');
+            mainContent.classList.remove('sidebar-collapsed');
+        }
+        
+        localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+    }
+
+    function toggleSidebar() {
+        sidebarOpen = !sidebarOpen;
+        
+        if (sidebarOpen) {
+            sidebar.classList.add('open');
+            mobileOverlay.classList.add('active');
+            menuIcon.className = 'bx bx-x';
+        } else {
+            sidebar.classList.remove('open');
+            mobileOverlay.classList.remove('active');
+            menuIcon.className = 'bx bx-menu';
+        }
+    }
+
+    function toggleDarkMode() {
+        darkMode = !darkMode;
+        
+        if (darkMode) {
+            body.classList.add('dark');
+            modeIcon.className = 'bx bx-sun nav-icon';
+            modeText.textContent = 'Modo Claro';
+        } else {
+            body.classList.remove('dark');
+            modeIcon.className = 'bx bx-moon nav-icon';
+            modeText.textContent = 'Modo Oscuro';
+        }
+        
+        localStorage.setItem('darkMode', darkMode);
+    }
+
+    // Event listeners
+    sidebarToggleBtn.addEventListener('click', toggleSidebarCollapse);
+    mobileMenuBtn.addEventListener('click', toggleSidebar);
+    mobileOverlay.addEventListener('click', toggleSidebar);
+    darkModeToggle.addEventListener('click', toggleDarkMode);
+    document.querySelector('.logo').addEventListener('dblclick', toggleSidebarCollapse);
+
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 1024) {
+            sidebar.classList.remove('open');
+            mobileOverlay.classList.remove('active');
+            menuIcon.className = 'bx bx-menu';
+            sidebarOpen = false;
+        } else {
+            sidebar.classList.remove('collapsed');
+            mainContent.classList.remove('sidebar-collapsed');
+            sidebarCollapsed = false;
+            toggleIcon.className = 'bx bx-chevron-left';
+        }
+    });
+
+    window.addEventListener('load', function() {
+        const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (savedDarkMode) {
+            toggleDarkMode();
+        }
+        
+        if (window.innerWidth >= 1024) {
+            const savedSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (savedSidebarCollapsed) {
+                toggleSidebarCollapse();
+            }
+        }
+    });
+
+    // FUNCIÓN PARA CREAR DROPDOWN PERSONALIZADO ELEGANTE
+    function createCustomDropdown(inputId, dropdownId) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        
+        if (!input || !dropdown) return;
+        
+        // Mostrar dropdown al hacer focus
+        input.addEventListener('focus', function() {
+            dropdown.classList.add('show');
+            filterOptions('');
+        });
+        
+        // Filtrar opciones mientras escribes
+        input.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            filterOptions(query);
+            dropdown.classList.add('show');
+        });
+        
+        // Ocultar dropdown al perder focus (con delay para permitir click en opciones)
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                dropdown.classList.remove('show');
+            }, 200);
+        });
+        
+        // Función para filtrar opciones
+        function filterOptions(query) {
+            const options = dropdown.querySelectorAll('.custom-select-option');
+            let hasVisibleOptions = false;
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    option.style.display = 'flex';
+                    hasVisibleOptions = true;
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Si hay texto pero no coincide con ninguna opción, permitir texto libre
+            if (query && !hasVisibleOptions) {
+                // El usuario puede escribir libremente
+            }
+        }
+        
+        // Manejar click en opciones
+        dropdown.addEventListener('click', function(e) {
+            const option = e.target.closest('.custom-select-option');
+            if (option) {
+                const value = option.getAttribute('data-value');
+                input.value = value;
+                dropdown.classList.remove('show');
+                input.focus();
+            }
+        });
+        
+        // Manejar navegación con teclado
+        input.addEventListener('keydown', function(e) {
+            const visibleOptions = dropdown.querySelectorAll('.custom-select-option[style*="flex"], .custom-select-option:not([style*="none"])');
+            const currentSelected = dropdown.querySelector('.custom-select-option.selected');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                dropdown.classList.add('show');
+                let next = currentSelected ? currentSelected.nextElementSibling : visibleOptions[0];
+                while (next && next.style.display === 'none') {
+                    next = next.nextElementSibling;
+                }
+                if (next) {
+                    if (currentSelected) currentSelected.classList.remove('selected');
+                    next.classList.add('selected');
+                    next.scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                dropdown.classList.add('show');
+                let prev = currentSelected ? currentSelected.previousElementSibling : visibleOptions[visibleOptions.length - 1];
+                while (prev && prev.style.display === 'none') {
+                    prev = prev.previousElementSibling;
+                }
+                if (prev) {
+                    if (currentSelected) currentSelected.classList.remove('selected');
+                    prev.classList.add('selected');
+                    prev.scrollIntoView({ block: 'nearest' });
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentSelected) {
+                    const value = currentSelected.getAttribute('data-value');
+                    input.value = value;
+                    dropdown.classList.remove('show');
+                    // Quitar selección
+                    currentSelected.classList.remove('selected');
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+                if (currentSelected) currentSelected.classList.remove('selected');
+            }
+        });
+        
+        // Limpiar selección cuando se cierre el dropdown
+        dropdown.addEventListener('transitionend', function() {
+            if (!dropdown.classList.contains('show')) {
+                const selected = dropdown.querySelector('.custom-select-option.selected');
+                if (selected) selected.classList.remove('selected');
+            }
+        });
+    }
+
+    // Form functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        createCustomDropdown('analista-select', 'analistaDropdown');
+        createCustomDropdown('gerencia-select', 'gerenciaDropdown');
+        createCustomDropdown('ubicacion-select', 'ubicacionDropdown');
+
+        // Verificación de RUT duplicado
+        const form = document.querySelector('form.form-main');
+        const rutInput = document.getElementById('rut');
+        const nombreInput = document.getElementById('Nombre');
+        const rutDuplicado = document.getElementById('rut-duplicado');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            rutDuplicado.style.display = 'none';
+            const rut = rutInput.value.trim();
+
+            const quienrepone = document.getElementById('Quienrepone');
+            const wasDisabled = quienrepone.disabled;
+            quienrepone.disabled = false;
+
+            fetch(`/verificar_rut/?rut=${encodeURIComponent(rut)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        rutDuplicado.textContent = `El Usuario "${data.nombre}" ya está ingresado. Por favor actualice los datos en el apartado "Ver Datos Subidos".`;
+                        rutDuplicado.style.display = 'block';
+                        // Restaurar el estado disabled si había error
+                        quienrepone.disabled = wasDisabled;
+                    } else {
+                        rutDuplicado.style.display = 'none';
+                        // El campo permanece habilitado para el envío
+                        form.submit();
+                    }
+                })
+                .catch(() => {
+                    // El campo permanece habilitado para el envío
+                    form.submit();
+                });
+        });
+        // Establecer fecha mínima como hoy
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('fecha-induccion').min = today;
+        document.getElementById('fecha-ingreso').min = today;
+
+        // Función para establecer valor fijo según tipo de contrato
+        window.setContratoIndefinido = function () {
+            const tipoContrato = document.getElementById('tipo-contrato');
+            const contrato = document.getElementById('contrato');
+            const quienrepone = document.getElementById('Quienrepone');
+            const quienreponeBackup = document.getElementById('QuienreponeBackup');
+            let prefix = '';
+
+            if (tipoContrato.value === 'Reposición') {
+                prefix = 'Plazo Fijo ';
+                // Habilitar el campo Quienrepone
+                quienrepone.disabled = false;
+                quienrepone.required = true;
+            } else if (tipoContrato.value === 'Expansión') {
+                prefix = 'Indefinido.';
+                // Deshabilitar el campo Quienrepone
+                quienrepone.disabled = true;
+                quienrepone.required = false;
+                quienrepone.value = ''; // Limpiar el campo
+                quienreponeBackup.value = ''; // Limpiar el backup
+            } else {
+                contrato.value = '';
+                // Deshabilitar el campo Quienrepone
+                quienrepone.disabled = true;
+                quienrepone.required = false;
+                quienrepone.value = '';
+                quienreponeBackup.value = '';
+                return;
+            }
+
+            if (!contrato.value.startsWith(prefix)) {
+                contrato.value = prefix;
+            }
+            setTimeout(() => {
+                contrato.setSelectionRange(contrato.value.length, contrato.value.length);
+            }, 0);
+        };
+        // Sincronizar el campo backup cuando se escriba en el campo principal
+        document.getElementById('Quienrepone').addEventListener('input', function() {
+        document.getElementById('QuienreponeBackup').value = this.value;
+        });
+
+        // Evitar que el usuario borre el prefijo
+        document.getElementById('contrato').addEventListener('input', function (e) {
+            const tipoContrato = document.getElementById('tipo-contrato');
+            let prefix = '';
+            if (tipoContrato.value === 'Reposición') {
+                prefix = 'Plazo Fijo. ';
+            } else if (tipoContrato.value === 'Expansión') {
+                prefix = 'Indefinido. ';
+            }
+            if (prefix && !this.value.startsWith(prefix)) {
+                this.value = prefix;
+            }
+        });
+
+        // Proteger el campo al pegar
+        document.getElementById('contrato').addEventListener('paste', function (e) {
+            e.preventDefault();
+            const tipoContrato = document.getElementById('tipo-contrato');
+            let prefix = '';
+            if (tipoContrato.value === 'Reposición') {
+                prefix = 'Plazo Fijo. ';
+            } else if (tipoContrato.value === 'Expansión') {
+                prefix = 'Indefinido. ';
+            }
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            this.value = prefix + text.replace(prefix, '');
+        });
+
+        // Función para formatear RUT
+        window.formatRUT = function () {
+            const rutInput = document.getElementById('rut');
+            let rut = rutInput.value.replace(/[^0-9kK]/g, '');
+
+            if (rut.length > 1) {
+                const dv = rut.slice(-1);
+                const rutBody = rut.slice(0, -1);
+
+                let formatted = '';
+                for (let i = rutBody.length - 1, j = 0; i >= 0; i--, j++) {
+                    formatted = rutBody[i] + formatted;
+                    if (j === 2 && i !== 0) {
+                        formatted = '.' + formatted;
+                        j = -1;
+                    }
+                }
+
+                rutInput.value = formatted + '-' + dv;
+            }
+        };
+
+        // Función para validar RUT
+        window.validarRUT = function () {
+            const rutInput = document.getElementById('rut');
+            const rutError = document.getElementById('rut-error');
+            const rut = rutInput.value.replace(/\./g, '').replace('-', '');
+
+            if (rut.length < 2) {
+                rutError.style.display = 'block';
+                rutInput.classList.add('invalid-input');
+                return false;
+            }
+
+            const dv = rut.slice(-1).toUpperCase();
+            const rutBody = rut.slice(0, -1);
+
+            let suma = 0;
+            let multiplicador = 2;
+
+            for (let i = rutBody.length - 1; i >= 0; i--) {
+                suma += parseInt(rutBody[i]) * multiplicador;
+                multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+            }
+
+            const resto = suma % 11;
+            const dvCalculado = resto === 0 ? '0' : resto === 1 ? 'K' : (11 - resto).toString();
+
+            if (dv === dvCalculado) {
+                rutError.style.display = 'none';
+                rutInput.classList.remove('invalid-input');
+                rutInput.classList.add('valid-input');
+                return true;
+            } else {
+                rutError.style.display = 'block';
+                rutInput.classList.add('invalid-input');
+                rutInput.classList.remove('valid-input');
+                return false;
+            }
+        };
+
+        // Función para formatear teléfono
+    window.formatTelefono = function () {
+        const telefonoInput = document.getElementById('Telefono');
+        let telefono = telefonoInput.value.replace(/[^0-9]/g, '');
+
+        if (telefono.length > 0) {
+            // Caso 1: Si ya tiene el formato completo (+56 9 XXXXXXXX), no hacer nada
+            if (telefonoInput.value.match(/^\+56\s9\s\d+$/)) {
+                return;
+            }
+
+            // Caso 2: Si empieza con 9
+            if (telefono.startsWith('9')) {
+                telefono = '56 ' + telefono;
+            }
+            // Caso 3: Si empieza con 569 
+            else if (telefono.startsWith('569')) {
+                telefono = '56 9 ' + telefono.substring(3);
+            }
+            // Caso 4: Si empieza con 56 pero no con 56 9 
+            else if (telefono.startsWith('56 ') && !telefono.startsWith('569')) {
+                telefono = telefono;
+            }
+            // Caso 5: Si no empieza con ninguno de los anteriores
+            else if (!telefono.startsWith('56')) {
+                telefono = '56 9 ' + telefono;
+            }
+
+            // Limitar longitud
+            if (telefono.length > 20) {
+                telefono = telefono.substring(0, 20);
+            }
+
+            telefonoInput.value = '+' + telefono;
+        }
+    };
+
+
+        // Función para capitalizar primera letra
+        window.capitalizeFirstLetter = function (input) {
+            if (input.value) {
+                input.value = input.value.charAt(0).toUpperCase() + input.value.slice(1);
+            }
+        };
+    });
+</script>
+</body>

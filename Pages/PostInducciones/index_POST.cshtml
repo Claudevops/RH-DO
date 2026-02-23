@@ -1,0 +1,2746 @@
+@page
+@model index_postmodel
+@{
+    ViewData["Title"] = "Datos y Correos";
+    Layout = null;
+}
+
+
+<link rel="stylesheet" href="~/css/DatosyCorreos.css">
+<link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo">
+                    @((User.Identity?.Name != null && User.Identity.Name.Length > 0)
+                                        ? User.Identity.Name.Substring(0, 1).ToUpper()
+                                        : "")
+                </div>
+                <div class="logo-text">
+                    <div class="logo-title">Esval/ADV</div>
+                    <div class="logo-subtitle">
+                        Recursos Humanos
+                        <br>
+                        <span style="font-size: 0.85em; color: var(--secondary-blue); font-weight: 500;">
+                            @User.Identity?.Name
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn">
+                <i class='bx bx-chevron-left' id="toggleIcon"></i>
+            </button>
+        </div>
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/index" class="nav-link">
+                        <i class='bx bx-home-alt nav-icon'></i>
+                        <span class="nav-text">Inicio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PreInducciones/index_PRE" class="nav-link">
+                        <i class='bx bx-book-open nav-icon'></i>
+                        <span class="nav-text">Inducciones</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PostInducciones/index_POST" class="nav-link active">
+                        <i class='bx bx-user-check nav-icon'></i>
+                        <span class="nav-text">Post Inducciones</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="mode-toggle">
+                <div class="mode-info">
+                    <i class='bx bx-moon nav-icon' id="modeIcon"></i>
+                    <span class="nav-text" id="modeText">Modo Oscuro</span>
+                </div>
+                <div class="toggle-switch" id="darkModeToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+
+            @if (Model.EsAdmin)
+            {
+                <a href="/PreInducciones/Utilidades_PRE/Configuracion_PRE" class="config-link">
+                    <i class='bx bx-cog nav-icon'></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+                
+                <div class="notifications-indicator @(Model.SolicitudesPendientes > 0 ? "has-notifications" : "")">
+                    <i class='bx bx-notification nav-icon'></i>
+                    <span class="nav-text">Notificaciones</span>
+                    @if (Model.SolicitudesPendientes > 0)
+                    {
+                        <span class="notification-badge">@Model.SolicitudesPendientes</span>
+                    }
+                    <span class="tooltip">
+                        @if (Model.SolicitudesPendientes > 0)
+                        {
+                            <text>@Model.SolicitudesPendientes notificación@(Model.SolicitudesPendientes == 1 ? "" : "es") pendiente@(Model.SolicitudesPendientes == 1 ? "" : "s")</text>
+                        }
+                        else
+                        {
+                            <text>Sin notificaciones</text>
+                        }
+                    </span>
+                </div>
+            }
+        
+            <a href="/Login/logout" class="logout-link">
+                <i class='bx bx-log-out nav-icon'></i>
+                <span class="nav-text">Salir</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" style="display:none;">
+        <i class='bx bx-menu' id="menuIcon"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="content-wrapper">
+            <!-- Header -->
+            <header class="page-header">
+                <h1 class="page-title">
+                    <i class='bx bx-data'></i>
+                    Gestión de Datos y Correos
+                </h1>
+                <p class="page-subtitle">Administra empleados y envía comunicaciones masivas</p>
+            </header>
+
+@if (TempData["MensajeExito"] != null)
+{
+    <div class="notification-popup alert-success auto-show">
+        <div class="notification-icon">
+            <i class='bx bx-check-circle'></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">Éxito</div>
+            <div class="notification-message">@TempData["MensajeExito"]</div>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class='bx bx-x'></i>
+        </button>
+    </div>
+}
+
+@if (TempData["MensajeError"] != null)
+{
+    <div class="notification-popup alert-danger auto-show">
+        <div class="notification-icon">
+            <i class='bx bx-error-circle'></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">Error</div>
+            <div class="notification-message">@TempData["MensajeError"]</div>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class='bx bx-x'></i>
+        </button>
+    </div>
+}
+
+@if (TempData["MensajeAdvertencia"] != null)
+{
+    <div class="notification-popup alert-warning auto-show">
+        <div class="notification-icon">
+            <i class='bx bx-error-circle'></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">Advertencia</div>
+            <div class="notification-message">@TempData["MensajeAdvertencia"]</div>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class='bx bx-x'></i>
+        </button>
+    </div>
+}
+
+@if (TempData["MensajeInfo"] != null)
+{
+    <div class="notification-popup alert-info auto-show">
+        <div class="notification-icon">
+            <i class='bx bx-info-circle'></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">Información</div>
+            <div class="notification-message">@TempData["MensajeInfo"]</div>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class='bx bx-x'></i>
+        </button>
+    </div>
+}
+
+
+<!-- NOTIFICACIÓN DE EFICACIA 90 DÍAS -->
+@if (Model.NotificacionesEficacia > 0)
+{
+    <div class="notification-popup alert-warning auto-show" id="notificacion-eficacia">
+        <div class="notification-icon">
+            <i class='bx bx-calendar-check'></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">Recordatorio: Encuesta de Eficacia</div>
+            <div class="notification-message">
+                Tienes que enviar el correo "Encuesta Eficacia sobre nuevo trabajador" para las siguientes @Model.NotificacionesEficacia persona@(Model.NotificacionesEficacia == 1 ? "" : "s"):
+                <br><br>
+                <strong>Empleados afectados:</strong>
+                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                    @foreach (var emp in Model.EmpleadosEficacia90Dias.Take(5))
+                    {
+                        <li>@emp.Nombre @emp.Apellido_Paterno - RUT: @emp.RUT (Ingreso: @emp.Fecha_Ingreso?.ToString("dd/MM/yyyy"))</li>
+                    }
+                    @if (Model.EmpleadosEficacia90Dias.Count > 5)
+                    {
+                        <li><em>... y @(Model.EmpleadosEficacia90Dias.Count - 5) más</em></li>
+                    }
+                </ul>
+                <br>                    
+                Enviar los correos Ahora.
+            </div>
+        </div>
+        <button class="notification-close" onclick="cerrarNotificacionEficacia()">
+            <i class='bx bx-x'></i>
+        </button>
+    </div>
+}
+
+
+<!-- NOTIFICACIÓN DE 7 DÍAS -->
+@if (Model.Notificaciones7Dias > 0)
+{
+    <div class="notification-popup alert-info auto-show" id="notificacion-7dias">
+        <div class="notification-icon">
+            <i class='bx bx-user-check'></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">Recordatorio: Consulta por accesos y elementos corporativos</div>
+            <div class="notification-message">
+                Tienes que enviar el correo "Consulta por accesos y elementos corporativos" para las siguientes @Model.Notificaciones7Dias persona@(Model.Notificaciones7Dias == 1 ? "" : "s") que han cumplido entre 1 y 7 días:
+                <br><br>
+                <strong>Empleados afectados:</strong>
+                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                    @foreach (var emp in Model.Empleados7Dias.Take(5))
+                    {
+                        <li>@emp.Nombre @emp.Apellido_Paterno - RUT: @emp.RUT (Ingreso: @emp.Fecha_Ingreso?.ToString("dd/MM/yyyy"))</li>
+                    }
+                    @if (Model.Empleados7Dias.Count > 5)
+                    {
+                        <li><em>... y @(Model.Empleados7Dias.Count - 5) más</em></li>
+                    }
+                </ul>
+                <br>
+            </div>
+        </div>
+        <button class="notification-close" onclick="cerrarNotificacion7Dias()">
+            <i class='bx bx-x'></i>
+        </button>
+    </div>
+}
+
+
+<!-- Mantener el mensaje de "no hay notificaciones" solo si no hay ninguna notificación -->
+@if (Model.NotificacionesEficacia == 0 && Model.Notificaciones7Dias == 0)
+{
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 10px; margin: 10px 0;">
+        <strong>ℹ️ Info:</strong> No hay notificaciones pendientes en este momento.
+    </div>
+}
+
+            <!-- Search Section -->
+            <section class="search-section">
+                <div class="search-header">
+                    <div class="search-icon">
+                        <i class='bx bx-search'></i>
+                    </div>
+                    <h2 class="search-title">Búsqueda de Empleados</h2>
+                </div>
+
+                <div class="search-forms">
+                                        <!-- Búsqueda por fecha -->
+                    <div class="search-form">
+                        <h3 class="search-form-title">
+                            <i class='bx bx-calendar'></i>
+                            Por Fecha de Ingreso
+                        </h3>
+                        <form method="get">
+                            <div class="form-group">
+                                <label for="fechaBusqueda">Selecciona la fecha:</label>
+                                <input type="date" id="fechaBusqueda" name="FechaBusqueda" value="@Request.Query["FechaBusqueda"]" />
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-search">
+                                    <i class='bx bx-search'></i>
+                                    Buscar
+                                </button>
+                                <a href="@Url.Page("/PreInducciones/DatosyCorreos/DatosyCorreos")" class="btn-clear">
+                                    <i class='bx bx-x'></i>
+                                    Limpiar
+                                </a>
+                            </div>
+                        </form>
+                        
+                        @if (Model.FechaBusqueda.HasValue && Model.Empleados.Count == 0)
+                        {
+                            <div class="error-message">
+                                <i class='bx bx-error'></i>
+                                Seleccione Fecha Válida
+                            </div>
+                        }
+                    </div>
+                    <!-- Búsqueda general -->
+                    <div class="search-form">
+                        <h3 class="search-form-title">
+                            <i class='bx bx-search-alt'></i>
+                            Búsqueda General
+                        </h3>
+                        <form method="get">
+                            <div class="form-group">
+                                <label for="busquedaGeneral">RUT, Nombre o Ticket:</label>
+                                <input type="text" id="busquedaGeneral" name="BusquedaGeneral" value="@Request.Query["BusquedaGeneral"]" placeholder="Ingresa RUT, Nombre o Ticket" />
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-search">
+                                    <i class='bx bx-search'></i>
+                                    Buscar
+                                </button>
+                                <a href="@Url.Page("/PostInducciones/index_POST")" class="btn-clear">
+                                    <i class='bx bx-x'></i>
+                                    Limpiar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Section -->
+            <section class="data-section">
+                <div class="data-header">
+                    <h2 class="data-title">
+                        <i class='bx bx-group'></i>
+                        Empleados
+                    </h2>
+                    <div class="data-count">
+                        @Model.Empleados.Count empleados
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="employee-table">
+                        <thead>
+                            <tr>
+                                <th>Acciones</th>
+                                <th>Fecha de Ingreso</th>
+                                <th>Fecha de Inducción</th>
+                                <th>Analista</th>
+                                <th>RUT</th>
+                                <th>Nombre</th>
+                                <th>Apellido Paterno</th>
+                                <th>Apellido Materno</th>
+                                <th>Fecha de Nacimiento</th>
+                                <th>Correo</th>
+                                <th>Teléfono</th>
+                                <th>Dirección</th>
+                                <th>Sociedad</th>
+                                <th>Cargo</th>
+                                <th>Gerencia</th>
+                                <th>Correo de jefatura</th>
+                                <th>Ubicación</th>
+                                <th>Ticket</th>
+                                <th>Contrato</th>
+                                <th>Reemplazo</th>
+                                <th>Última Modificación</th>
+                                <th>Usuario que Modificó</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var emp in Model.Empleados)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="action-cell">
+                                            @if (Model.EsAdmin)
+                                            {
+                                                <button class="action-btn btn-edit" onclick="abrirModalEditarEmpleado('@emp.RUT')" type="button">
+                                                    <i class='bx bx-edit'></i>
+                                                    Editar
+                                                </button>
+                                                <button class="action-btn btn-delete" onclick="abrirModalEliminarEmpleado('@emp.RUT')" type="button">
+                                                    <i class='bx bx-trash'></i>
+                                                    Eliminar
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="action-btn btn-edit" onclick="abrirModalEditarEmpleado('@emp.RUT')" type="button">
+                                                    <i class='bx bx-edit'></i>
+                                                    Edición
+                                                </button>
+                                                <button class="action-btn btn-delete" onclick="abrirModalEliminarEmpleado('@emp.RUT')" type="button">
+                                                    <i class='bx bx-trash'></i>
+                                                    Eliminación
+                                                </button>
+                                            }
+                                            <div class="checkbox-cell">
+                                                <input type="checkbox" name="selectedEmpleados" value="@emp.RUT" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@(emp.Fecha_Ingreso.HasValue ? emp.Fecha_Ingreso.Value.ToString("dd-MM-yyyy") : "")</td>
+                                    <td>@(emp.Fecha_Induccion.HasValue ? emp.Fecha_Induccion.Value.ToString("dd-MM-yyyy") : "")</td>
+                                    <td>@emp.Analista</td>
+                                    <td>@emp.RUT</td>
+                                    <td>@emp.Nombre</td>
+                                    <td>@emp.Apellido_Paterno</td>
+                                    <td>@emp.Apellido_Materno</td>
+                                    <td>@(emp.Fecha_Nacimiento.HasValue ? emp.Fecha_Nacimiento.Value.ToString("dd-MM-yyyy") : "")</td>
+                                    <td>@emp.Correo</td>
+                                    <td>@emp.Telefono</td>
+                                    <td>@emp.Direccion</td>
+                                    <td>@emp.Sociedad</td>
+                                    <td>@emp.Cargo</td>
+                                    <td>@emp.Gerencia</td>
+                                    <td>@emp.Gerencia_mail</td>
+                                    <td>@emp.Ubicacion</td>
+                                    <td>@emp.Ticket</td>
+                                    <td>@emp.Contrato</td>
+                                    <td>@emp.Quienrepone</td>
+                                    <td>@emp.UltimaModificacion</td>
+                                    <td>@emp.UsuarioModifico</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Pagination -->
+@if (Model.TotalPages > 1)
+{
+    int currentPage = Model.PageNumber;
+    int totalPages = Model.TotalPages;
+    int startPage = Math.Max(1, currentPage - 2);
+    int endPage = Math.Min(totalPages, startPage + 4);
+    if (endPage - startPage < 4)
+        startPage = Math.Max(1, endPage - 4);
+
+    <section class="pagination-section">
+        <nav class="pagination-nav">
+            <ul>
+                @* Flecha izquierda *@
+                <li>
+                    <a href="@Url.Page(null, null, new {
+                        PageNumber = Math.Max(1, currentPage - 1),
+                        FechaBusqueda = Model.FechaBusqueda?.ToString("yyyy-MM-dd"),
+                        BusquedaGeneral = Model.BusquedaGeneral
+                    }, null)" @(currentPage == 1 ? "class=disabled" : "")>
+                        &lt;
+                    </a>
+                </li>
+                @for (int i = startPage; i <= endPage; i++)
+                {
+                    if (i == currentPage)
+                    {
+                        <li><span>@i</span></li>
+                    }
+                    else
+                    {
+                        <li>
+                            <a href="@Url.Page(null, null, new {
+                                PageNumber = i,
+                                FechaBusqueda = Model.FechaBusqueda?.ToString("yyyy-MM-dd"),
+                                BusquedaGeneral = Model.BusquedaGeneral
+                            }, null)">@i</a>
+                        </li>
+                    }
+                }
+                @* Flecha derecha *@
+                <li>
+                    <a href="@Url.Page(null, null, new {
+                        PageNumber = Math.Min(totalPages, currentPage + 1),
+                        FechaBusqueda = Model.FechaBusqueda?.ToString("yyyy-MM-dd"),
+                        BusquedaGeneral = Model.BusquedaGeneral
+                    }, null)" @(currentPage == totalPages ? "class=disabled" : "")>
+                        &gt;
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </section>
+}} <!-- NO SACAR EL "}" MANTIENE LA PAG FUNCIONANDO. -->
+
+            <!-- Email Actions Section -->
+            <section class="email-actions-section">
+                <div class="email-actions-header">
+                    <div class="email-actions-icon">
+                        <i class='bx bx-envelope'></i>
+                    </div>
+                    <h2 class="email-actions-title">Acciones de Correo POST Inducciones</h2>
+                </div>
+
+                <div class="email-buttons-grid">
+                    <button type="button" class="email-button" onclick="abrirModalCorreoPorSeleccion(4)">
+                        <i class='bx bx-user-check'></i>
+                        Encuesta Evaluación técnica jefaturas
+                    </button>
+                    <button type="button" class="email-button" onclick="abrirModalCorreoPorSeleccion(1)">
+                        <i class='bx bx-user-check'></i>
+                        Encuesta Satisfacción al Líder sobre proceso R&S 
+                    </button>
+                    <button type="button" class="email-button" onclick="abrirModalCorreoPorSeleccion(2)">
+                        <i class='bx bx-user-check'></i>
+                        Encuesta Satisfacción al Nuevo Trabajador
+                    </button>
+                    <button type="button" class="email-button" onclick="abrirModalCorreoPorSeleccion(3)">
+                        <i class='bx bx-user-check'></i>
+                        Encuesta Eficacia sobre nuevo trabajador
+                    </button>
+
+                    <button type="button" class="email-button" onclick="abrirModalCorreoPorFecha(6)">
+                        <i class='bx bx-user-voice'></i>
+                        Correo IMPORTANTE: Consulta por accesos y elementos corporativos
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay" onclick="cerrarModalCorreo()"></div>
+
+    <!-- Modal de Correo -->
+    <div id="modal-correo-unico">
+        <div id="modal-correo-unico-header">
+            <span id="modalCorreoTitulo">Preview Correo</span>
+            <span class="close" onclick="cerrarModalCorreo()" style="cursor:pointer; font-size: 1.5rem;">&times;</span>
+        </div>
+        <div class="modal-content">
+            <form id="formCorreoPreview">
+                @Html.AntiForgeryToken()
+                
+                <div class="modal-form-group">
+                    <label for="modalAsunto">Asunto:</label>
+                    <input type="text" id="modalAsunto" name="modalAsunto" />
+                </div>
+                
+                <div class="modal-form-group">
+                    <label for="modalDestinatarios">Destinatarios:</label>
+                    <input type="text" id="modalDestinatarios" name="modalDestinatarios" placeholder="Ingrese destinatarios Separados por ; o ," />
+                </div>
+                
+                <div class="modal-form-group">
+                    <label for="modalCC">CC:</label>
+                    <input type="text" id="modalCC" name="modalCC" placeholder="Ingrese CC Separados por ; o ," />
+                </div>
+                
+                <div class="modal-form-group">
+                    <label for="modalCCO">CCO:</label>
+                    <input type="text" id="modalCCO" name="modalCCO" placeholder="Ingrese CCO Separados por ; o ," />
+                </div>
+                
+                <div class="modal-form-group">
+                    <label for="modalAdjuntarArchivo">Adjuntos:</label>
+                    <div id="modalAdjuntos"></div>
+                    <input type="file" id="modalAdjuntarArchivo" multiple />
+                </div>
+                
+                <div class="modal-form-group">
+                    <label for="modalContenido">Contenido:</label>
+                    <div id="modalContenido" contenteditable="true"></div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="boton-estilizado" onclick="enviarCorreoDesdeModal()">
+                        <i class='bx bx-send'></i>
+                        Enviar Correo
+                    </button>
+                    <button type="button" class="boton-estilizado secondary" onclick="cerrarModalCorreo()">
+                        <i class='bx bx-x'></i>
+                        Cerrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<!-- Modal Editar Empleado -->
+<div id="modal-editar-empleado" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:700px;">
+        <h2>Editar Empleado</h2>
+        <form method="post" asp-page-handler="EditarEmpleado" id="formEditarEmpleado">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="editRut" name="RUT" />
+
+<!-- Analista -->
+<div class="modal-form-group">
+    <label>Analista Entrevista Experiencia:</label>
+    <div id="analistaDisplayGroup">
+        <div class="display-field">
+            <input type="text" id="analistaDisplay" class="form-control display-input" readonly />
+            <button type="button" id="btnEditarAnalista" class="edit-field-btn">
+                <i class='bx bx-edit'></i>
+            </button>
+        </div>
+    </div>
+    <div id="analistaSelectGroup" class="select-group" style="display:none;">
+        <div class="custom-select-container">
+            <input type="text" 
+                   id="editAnalista" 
+                   name="Analista" 
+                   class="custom-select-input" 
+                   placeholder="Buscar o seleccionar analista..."
+                   autocomplete="off" />
+            <div class="custom-select-dropdown" id="analistaDropdown">
+                @foreach (var analista in Model.Analistas)
+                {
+                    <div class="custom-select-option" data-value="@analista.Nombre_ANA">
+                        <i class='bx bx-user'></i>
+                        @analista.Nombre_ANA
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="field-actions">
+            <button type="button" id="btnCancelarAnalista" class="btn-cancel">
+                <i class='bx bx-x'></i>
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+            <div class="modal-form-group">
+                <label>Fecha de Inducción:</label>
+                <input type="date" id="editFechaInduccion" name="Fecha_Induccion" />
+            </div>
+            <div class="modal-form-group">
+                <label>Fecha de Ingreso:</label>
+                <input type="date" id="editFechaIngreso" name="Fecha_Ingreso" />
+            </div>
+
+            <!-- Datos Personales -->
+            <div class="modal-form-group">
+                <label>Nombre:</label>
+                <input type="text" id="editNombre" name="Nombre" required />
+            </div>
+            <div class="modal-form-group">
+                <label>Apellido Paterno:</label>
+                <input type="text" id="editApellidoPaterno" name="Apellido_Paterno" required />
+            </div>
+            <div class="modal-form-group">
+                <label>Apellido Materno:</label>
+                <input type="text" id="editApellidoMaterno" name="Apellido_Materno" />
+            </div>
+            <div class="modal-form-group">
+                <label>Fecha de Nacimiento:</label>
+                <input type="date" id="editFechaNacimiento" name="Fecha_Nacimiento" />
+            </div>
+
+            <!-- Información de Contacto -->
+            <div class="modal-form-group">
+                <label>Correo:</label>
+                <input type="email" id="editCorreo" name="Correo" />
+            </div>
+            <div class="modal-form-group">
+                <label>Número de Teléfono:</label>
+                <input type="tel" id="editTelefono" name="Telefono" />
+            </div>
+            <div class="modal-form-group">
+                <label>Dirección Personal:</label>
+                <input type="text" id="editDireccion" name="Direccion" />
+            </div>
+
+            <!-- Información Laboral -->
+            <div class="modal-form-group">
+                <label>Sociedad:</label>
+                <select id="editSociedad" name="Sociedad">
+                    <option value="" disabled selected>Seleccione</option>
+                    @foreach (var soc in Model.Sociedades)
+                    {
+                        <option value="@soc.Nombre_SOC">@soc.Nombre_SOC</option>
+                    }
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label>Cargo:</label>
+                <input type="text" id="editCargo" name="Cargo" />
+            </div>
+
+
+<!-- Gerencia -->
+<div class="modal-form-group">
+    <label>Gerencia:</label>
+    <div id="gerenciaDisplayGroup">
+        <div class="display-field">
+            <input type="text" id="gerenciaDisplay" class="form-control display-input" readonly />
+            <button type="button" id="btnEditarGerencia" class="edit-field-btn">
+                <i class='bx bx-edit'></i>
+            </button>
+        </div>
+    </div>
+    <div id="gerenciaSelectGroup" class="select-group" style="display:none;">
+        <div class="custom-select-container">
+            <input type="text" 
+                   id="editGerencia" 
+                   name="Gerencia" 
+                   class="custom-select-input" 
+                   placeholder="Buscar o seleccionar gerencia..."
+                   autocomplete="off" />
+            <div class="custom-select-dropdown" id="gerenciaDropdown">
+                @foreach (var ger in Model.Gerencias)
+                {
+                    <div class="custom-select-option" data-value="@ger.Nombre_GER">
+                        <i class='bx bx-buildings'></i>
+                        @ger.Nombre_GER
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="field-actions">
+            <button type="button" id="btnCancelarGerencia" class="btn-cancel">
+                <i class='bx bx-x'></i>
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+<!-- Ubicación -->
+<div class="modal-form-group">
+    <label>Ubicación:</label>
+    <div id="ubicacionDisplayGroup">
+        <div class="display-field">
+            <input type="text" id="ubicacionDisplay" class="form-control display-input" readonly />
+            <button type="button" id="btnEditarUbicacion" class="edit-field-btn">
+                <i class='bx bx-edit'></i>
+            </button>
+        </div>
+    </div>
+    <div id="ubicacionSelectGroup" class="select-group" style="display:none;">
+        <div class="custom-select-container">
+            <input type="text" 
+                   id="editUbicacion" 
+                   name="Ubicacion" 
+                   class="custom-select-input" 
+                   placeholder="Buscar o seleccionar ubicación..."
+                   autocomplete="off" />
+            <div class="custom-select-dropdown" id="ubicacionDropdown">
+                @foreach (var ubi in Model.Ubicaciones)
+                {
+                    <div class="custom-select-option" data-value="@ubi.Nombre_UBI">
+                        <i class='bx bx-map'></i>
+                        @ubi.Nombre_UBI
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="field-actions">
+            <button type="button" id="btnCancelarUbicacion" class="btn-cancel">
+                <i class='bx bx-x'></i>
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+            <div class="modal-form-group">
+                <label>Jefe Directo:</label>
+                <input type="text" id="editJefeDirecto" name="Jefe_Directo" />
+            </div>
+            <div class="modal-form-group">
+                <label>Correo del jefe:</label>
+                <input type="email" id="editGerenciaMail" name="Gerencia_mail" />
+            </div>
+
+            <!-- Información de Contrato -->
+            <div class="modal-form-group">
+                <label>Motivo de Contratación:</label>
+                <select id="editTipoContrato" name="Tipo_de_Contrato" required>
+                    <option value="" disabled selected>Seleccione</option>
+                    <option value="Reposición">Reposición</option>
+                    <option value="Indefinido">Indefinido</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label>Tiempo de Contratación:</label>
+                <input type="text" id="editContrato" name="Contrato" />
+                
+            </div>
+            
+            <div class="modal-form-group">
+                <label>A quien reemplaza?:</label>
+                <input type="text" id="editReemplazo" name="Quienrepone" />
+            </div>
+
+            <div class="modal-form-group">
+                <label>Ticket:</label>
+                <input type="text" id="editTicket" name="Ticket" />
+            </div>
+
+            <!-- Formación Académica -->
+            <div class="modal-form-group">
+                <label>Carrera:</label>
+                <input type="text" id="editCarrera" name="Carrera" />
+            </div>
+            <div class="modal-form-group">
+                <label>Universidad:</label>
+                <input type="text" id="editUniversidad" name="Universidad" />
+            </div>
+
+            <div class="modal-buttons">
+                    @if (Model.EsAdmin)
+    {
+        <button type="submit" class="boton-estilizado"><i class='bx bx-save'></i>Editar</button>
+    }
+    else
+    {
+        <button type="button" id="btnSolicitarCambios" class="boton-estilizado"><i class='bx bx-send'></i>Solicitar Cambios</button>
+    }
+                <button type="button" class="boton-estilizado secondary" onclick="cerrarModalEditarEmpleado()">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- Modal Confirmar Eliminación -->
+<div id="modal-eliminar-empleado" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:500px;">
+        <div class="modal-header-elimination">
+            <div class="elimination-icon">
+                <i class='bx bx-error-circle'></i>
+            </div>
+            <h2 id="tituloEliminar">Confirmar Eliminación</h2>
+        </div>
+        
+        <div class="modal-body-elimination">
+            <div class="employee-info" id="infoEmpleadoEliminar">
+                <!-- Información del empleado se cargará aquí -->
+            </div>
+            
+            <div class="warning-message">
+                
+                <span id="mensajeAdvertencia">¿Estás seguro que deseas eliminar este empleado?</span>
+            </div>
+        </div>
+        
+        <div class="modal-buttons">
+            @if (Model.EsAdmin)
+            {
+                <form method="post" asp-page-handler="EliminarEmpleado" style="display:inline;">
+                    <input type="hidden" id="rutEliminarAdmin" name="rut" />
+                    <button type="submit" class="boton-estilizado danger">
+                        <i class='bx bx-trash'></i>
+                        Eliminar Permanentemente
+                    </button>
+                </form>
+            }
+            else
+            {
+                <button type="button" id="btnSolicitarEliminacion" class="boton-estilizado warning">
+                    <i class='bx bx-send'></i>
+                    Solicitar Eliminación
+                </button>
+            }
+            <button type="button" class="boton-estilizado secondary" onclick="cerrarModalEliminarEmpleado()">
+                <i class='bx bx-x'></i>
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Indicador de envío de correo -->
+<div id="sendingOverlay" class="sending-overlay">
+    <div class="sending-container">
+        <div class="sending-spinner"></div>
+        <div class="sending-title">Enviando correo...</div>
+        <div class="sending-message" id="sendingMessage">Preparando el envío del correo electrónico</div>
+        <div class="sending-progress">
+            <div class="sending-progress-bar"></div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Sidebar y modo oscuro
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const menuIcon = document.getElementById('menuIcon');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const modeIcon = document.getElementById('modeIcon');
+        const modeText = document.getElementById('modeText');
+        const body = document.body;
+        const checkboxes = document.querySelectorAll('input[name="selectedEmpleados"]');
+        const maxSeleccion = 5;
+        
+        // Variables para eliminar empleados
+        let rutEmpleadoAEliminar = null;
+        let datosEmpleadoAEliminar = null;
+
+        let sidebarOpen = false;
+        let sidebarCollapsed = false;
+        let darkMode = false;
+
+        function toggleSidebarCollapse() {
+            sidebarCollapsed = !sidebarCollapsed;
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+            }
+            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+        }
+
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            if (sidebarOpen) {
+                sidebar.classList.add('open');
+                mobileOverlay.classList.add('active');
+                menuIcon.className = 'bx bx-x';
+            } else {
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+            }
+        }
+
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            if (darkMode) {
+                body.classList.add('dark');
+                modeIcon.className = 'bx bx-sun nav-icon';
+                modeText.textContent = 'Modo Claro';
+            } else {
+                body.classList.remove('dark');
+                modeIcon.className = 'bx bx-moon nav-icon';
+                modeText.textContent = 'Modo Oscuro';
+            }
+            localStorage.setItem('darkMode', darkMode);
+        }
+        
+
+        if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', toggleSidebarCollapse);
+        if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
+        if (mobileOverlay) mobileOverlay.addEventListener('click', toggleSidebar);
+        if (darkModeToggle) darkModeToggle.addEventListener('click', toggleDarkMode);
+        const logo = document.querySelector('.logo');
+        if (logo) logo.addEventListener('dblclick', toggleSidebarCollapse);
+
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+                sidebarOpen = false;
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+                sidebarCollapsed = false;
+                toggleIcon.className = 'bx bx-chevron-left';
+            }
+        });
+
+        window.addEventListener('load', function () {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (savedDarkMode) {
+                toggleDarkMode();
+            }
+            if (window.innerWidth >= 1024) {
+                const savedSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedSidebarCollapsed) {
+                    toggleSidebarCollapse();
+                }
+            }
+        });
+
+        // ===== NOTIFICACIONES AUTOMÁTICAS DE TEMPDATA =====
+        const notificacionesAutoShow = document.querySelectorAll('.notification-popup.auto-show');
+        
+        notificacionesAutoShow.forEach((notificacion, index) => {
+            // Posicionar múltiples notificaciones
+            notificacion.style.top = (20 + (index * 80)) + 'px';
+            
+            // Auto-remover después de 5 segundos
+            setTimeout(() => {
+                if (notificacion && notificacion.parentElement) {
+                    notificacion.style.animation = 'fadeOutNotification 0.5s ease-in forwards';
+                    setTimeout(() => {
+                        if (notificacion.parentElement) {
+                            notificacion.remove();
+                            reposicionarNotificaciones();
+                        }
+                    }, 500);
+                }
+            }, 5000);
+            
+            // Pausar auto-cierre al hacer hover
+            notificacion.addEventListener('mouseenter', function() {
+                this.style.animationPlayState = 'paused';
+            });
+            
+            notificacion.addEventListener('mouseleave', function() {
+                this.style.animationPlayState = 'running';
+            });
+        });
+        
+        // Función para reposicionar notificaciones
+        function reposicionarNotificaciones() {
+            const notificaciones = document.querySelectorAll('.notification-popup');
+            notificaciones.forEach((notif, index) => {
+                notif.style.top = (20 + (index * 80)) + 'px';
+            });
+        }
+
+            // Agregar contador visual de selección
+        function crearContadorSeleccion() {
+            const searchSection = document.querySelector('.search-section');
+            if (searchSection && !document.getElementById('contador-seleccion')) {
+                const contadorDiv = document.createElement('div');
+                contadorDiv.id = 'contador-seleccion';
+                contadorDiv.className = 'contador-seleccion';
+                contadorDiv.innerHTML = `
+                    <div class="contador-content">
+                        <i class='bx bx-check-square'></i>
+                        <span class="contador-texto">Empleados seleccionados: <span id="numero-seleccionados">0</span>/${maxSeleccion}</span>
+                        <button type="button" id="btn-limpiar-seleccion" class="btn-limpiar-seleccion" style="display: none;" onclick="limpiarSeleccion()">
+                            <i class='bx bx-x'></i>
+                            Limpiar selección
+                        </button>
+                    </div>
+                `;
+                searchSection.appendChild(contadorDiv);
+            }
+        }
+
+        // Crear el contador al cargar la página
+        crearContadorSeleccion();
+
+        // Función para actualizar el contador
+        function actualizarContador() {
+            const seleccionados = document.querySelectorAll('input[name="selectedEmpleados"]:checked');
+            const numeroElement = document.getElementById('numero-seleccionados');
+            const btnLimpiar = document.getElementById('btn-limpiar-seleccion');
+            const contadorDiv = document.getElementById('contador-seleccion');
+            
+            if (numeroElement) {
+                numeroElement.textContent = seleccionados.length;
+            }
+            
+            if (btnLimpiar) {
+                btnLimpiar.style.display = seleccionados.length > 0 ? 'inline-flex' : 'none';
+            }
+            
+            if (contadorDiv) {
+                contadorDiv.className = `contador-seleccion ${
+                    seleccionados.length === 0 ? '' : 
+                    seleccionados.length === maxSeleccion ? 'limite-alcanzado' : 'con-seleccion'
+                }`;
+            }
+
+            // Deshabilitar checkboxes no seleccionados si se alcanza el límite
+            const checkboxesNoSeleccionados = document.querySelectorAll('input[name="selectedEmpleados"]:not(:checked)');
+            const limiteAlcanzado = seleccionados.length >= maxSeleccion;
+            
+            checkboxesNoSeleccionados.forEach(checkbox => {
+                checkbox.disabled = limiteAlcanzado;
+                
+                // Añadir/remover clase visual al contenedor
+                const actionCell = checkbox.closest('.action-cell');
+                if (actionCell) {
+                    if (limiteAlcanzado) {
+                        actionCell.classList.add('checkbox-disabled');
+                    } else {
+                        actionCell.classList.remove('checkbox-disabled');
+                    }
+                }
+            });
+
+            // Mostrar mensaje cuando se alcanza el límite
+            if (limiteAlcanzado && seleccionados.length === maxSeleccion) {
+                mostrarNotificacionInfo(`Límite alcanzado: Solo puedes seleccionar máximo ${maxSeleccion} empleados para envío secuencial`);
+            }
+        }
+
+        // Función para limpiar selección
+        window.limpiarSeleccion = function() {
+            const checkboxes = document.querySelectorAll('input[name="selectedEmpleados"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = false;
+                
+                // Remover clases visuales
+                const actionCell = checkbox.closest('.action-cell');
+                if (actionCell) {
+                    actionCell.classList.remove('checkbox-disabled');
+                }
+            });
+            
+            actualizarContador();
+            mostrarNotificacionInfo('Selección limpiada');
+        };
+
+        // Agregar event listeners a todos los checkboxes
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const seleccionados = document.querySelectorAll('input[name="selectedEmpleados"]:checked');
+                
+                // Si se intenta seleccionar más del límite, prevenir la selección
+                if (this.checked && seleccionados.length > maxSeleccion) {
+                    this.checked = false;
+                    mostrarNotificacionError(`No puedes seleccionar más de ${maxSeleccion} empleados para envío secuencial`);
+                    return;
+                }
+                
+                actualizarContador();
+            });
+        });
+        
+        // Actualizar contador inicial
+        actualizarContador();
+
+        // ===== FUNCIONES PARA MODALES DE CORREO =====
+        window.abrirModalCorreoPorFecha = function (tipo) {
+            const fechaInput = document.getElementById('fechaBusqueda');
+            const fecha = fechaInput ? fechaInput.value : "";
+
+            if (!fecha) {
+                mostrarNotificacionError("Debes seleccionar una fecha antes de enviar este correo POST.");
+                return;
+            }
+
+            document.getElementById('formCorreoPreview').reset();
+            document.getElementById('modalAdjuntos').innerHTML = "";
+            document.getElementById('modalContenido').innerHTML = "";
+
+            // Actualizar títulos según el tipo POST
+            const titulos = {
+                1: "Encuesta Satisfacción sobre proceso R&S",
+                2: "Encuesta Satisfacción sobre Nuevo Trabajador", 
+                3: "Encuesta Eficacia sobre nuevo trabajador"
+            };
+            
+            document.getElementById('modalCorreoTitulo').textContent = titulos[tipo] || "Preview Correo POST";
+
+            let url = `?handler=CorreoPreview&tipo=${tipo}&fecha=${encodeURIComponent(fecha)}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('modalAsunto').value = data.asunto || "";
+                    document.getElementById('modalDestinatarios').value = data.destinatarios || "";
+                    document.getElementById('modalCC').value = data.cc || "";
+                    document.getElementById('modalCCO').value = data.cco || "";
+                    document.getElementById('modalContenido').innerHTML = data.contenido || "";
+                    
+                    const adjuntosDiv = document.getElementById('modalAdjuntos');
+                    adjuntosDiv.innerHTML = "";
+                    if (data.adjuntos && Array.isArray(data.adjuntos)) {
+                        data.adjuntos.forEach(function (adj) {
+                            const link = document.createElement('a');
+                            link.textContent = adj;
+                            link.href = '/adjuntos/' + adj; 
+                            link.target = '_blank';
+                            link.className = "adjunto-item";
+                            adjuntosDiv.appendChild(link);
+                            adjuntosDiv.appendChild(document.createElement('br'));
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar preview POST:', error);
+                    mostrarNotificacionError('Error al cargar el preview del correo POST');
+                });
+
+            document.getElementById('modal-correo-unico').style.display = 'block';
+            document.getElementById('modalOverlay').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        };
+        
+    // ===== FUNCIONES PARA MODALES DE CORREO ACTUALIZADAS =====
+    window.abrirModalCorreoPorSeleccion = function (tipo) {
+        // 1. Verificar si hay búsqueda general activa
+        window.currentTipoCorreo = tipo;
+        const busquedaGeneral = '@Model.BusquedaGeneral';
+        const hayBusquedaGeneral = busquedaGeneral && busquedaGeneral.trim() !== '';
+        
+        let empleadosObjetivo = [];
+        let modoOperacion = '';
+        
+        if (hayBusquedaGeneral) {
+            //  Búsqueda General 
+            const filasEmpleados = document.querySelectorAll('.employee-table tbody tr');
+            empleadosObjetivo = Array.from(filasEmpleados).map(fila => {
+                const rutCell = fila.querySelector('td:nth-child(4)');
+                return rutCell ? rutCell.textContent.trim() : null;
+            }).filter(rut => rut);
+            
+            modoOperacion = 'busqueda';
+            
+            if (empleadosObjetivo.length === 0) {
+                mostrarNotificacionError("No se encontraron empleados en la búsqueda actual para enviar correos.");
+                return;
+            }
+            
+            console.log(`Modo búsqueda general: ${empleadosObjetivo.length} empleados encontrados`);
+            
+        } else {
+            // Selección manual - usar checkboxes seleccionados
+            let seleccionados = Array.from(document.querySelectorAll('input[name="selectedEmpleados"]:checked'))
+                .map(cb => cb.value);
+
+            // Si no hay ninguno seleccionado y solo hay un empleado visible, seleccionarlo automáticamente
+            if (seleccionados.length === 0) {
+                const visibles = Array.from(document.querySelectorAll('input[name="selectedEmpleados"]'));
+                if (visibles.length === 1) {
+                    seleccionados = [visibles[0].value];
+                    console.log('Auto-seleccionando único empleado visible:', seleccionados[0]);
+                }
+            }
+
+            if (seleccionados.length === 0) {
+                mostrarNotificacionError("Debes seleccionar al menos un empleado para enviar este correo.");
+                return;
+            }
+
+            // ===== VERIFICAR LÍMITE DE 5 EMPLEADOS =====
+            if (seleccionados.length > maxSeleccion) {
+                mostrarNotificacionError(`No puedes enviar correos a más de ${maxSeleccion} empleados a la vez. Por favor, selecciona máximo ${maxSeleccion} empleados.`);
+                return;
+            }
+            
+            empleadosObjetivo = seleccionados;
+            modoOperacion = 'seleccion';
+            
+            console.log(`Modo selección: ${empleadosObjetivo.length} empleados seleccionados`);
+        }
+
+        // ===== VERIFICAR SI HAY 5 O MENOS EMPLEADOS =====
+        if (empleadosObjetivo.length <= maxSeleccion && modoOperacion === 'seleccion') {
+            window.envioSecuencial = {
+                empleados: empleadosObjetivo,
+                tipo: tipo,
+                indiceActual: 0,
+                modo: 'secuencial'
+            };
+            
+            console.log(`Iniciando envío secuencial para ${empleadosObjetivo.length} empleados`);
+            abrirModalCorreoSecuencial();
+            return;
+        }
+        // Preparar modal 
+        document.getElementById('formCorreoPreview').reset();
+        document.getElementById('modalAdjuntos').innerHTML = "";
+        document.getElementById('modalContenido').innerHTML = "";
+
+        // Actualizar títulos según el tipo POST
+        const titulos = {
+            1: "Encuesta Satisfacción sobre proceso R&S",
+            2: "Encuesta Satisfacción sobre Nuevo Trabajador", 
+            3: "Encuesta Eficacia sobre nuevo trabajador",
+            4: "Encuesta Evaluación técnica jefaturas"
+        };
+        
+        const tituloModal = titulos[tipo] || "Preview Correo POST";
+        document.getElementById('modalCorreoTitulo').textContent = tituloModal;
+
+        // Actualizar información en el modal
+        const infoModo = document.getElementById('modalInfoModo') || crearElementoInfoModo();
+        if (modoOperacion === 'busqueda') {
+            infoModo.innerHTML = `
+                <div class="modo-info busqueda">
+                    <i class='bx bx-search'></i>
+                    <strong>Modo: Búsqueda General</strong> - Se enviarán correos individuales a ${empleadosObjetivo.length} empleado(s) encontrado(s)
+                    <br><small>Búsqueda: "${busquedaGeneral}"</small>
+                </div>
+            `;
+        } else {
+            infoModo.innerHTML = `
+                <div class="modo-info seleccion">
+                    <i class='bx bx-check-square'></i>
+                    <strong>Modo: Selección Manual</strong> - Se enviarán correos individuales a ${empleadosObjetivo.length} empleado(s) seleccionado(s)
+                </div>
+            `;
+        }
+
+        // Obtener preview del primer empleado
+        let url = `?handler=CorreoPreview&tipo=${tipo}&rut=${encodeURIComponent(empleadosObjetivo[0])}&modo=${modoOperacion}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('modalAsunto').value = data.asunto || "";
+                document.getElementById('modalDestinatarios').value = data.destinatarios || "";
+                document.getElementById('modalCC').value = data.cc || "";
+                document.getElementById('modalCCO').value = data.cco || "";
+                document.getElementById('modalContenido').innerHTML = data.contenido || "";
+                
+                const adjuntosDiv = document.getElementById('modalAdjuntos');
+                adjuntosDiv.innerHTML = "";
+                if (data.adjuntos && Array.isArray(data.adjuntos)) {
+                    data.adjuntos.forEach(function (adj) {
+                        const link = document.createElement('a');
+                        link.textContent = adj;
+                        link.href = '/adjuntos/' + adj; 
+                        link.target = '_blank';
+                        link.className = "adjunto-item";
+                        adjuntosDiv.appendChild(link);
+                        adjuntosDiv.appendChild(document.createElement('br'));
+                    });
+                }
+                
+                // Guardar información para el envío
+                window.correoEnvioInfo = {
+                    tipo: tipo,
+                    empleados: empleadosObjetivo,
+                    modo: modoOperacion,
+                    busqueda: busquedaGeneral
+                };
+            })
+            .catch(error => {
+                console.error('Error al cargar preview POST:', error);
+                mostrarNotificacionError('Error al cargar el preview del correo POST');
+            });
+
+        document.getElementById('modal-correo-unico').style.display = 'block';
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    };
+
+// ===== ENVÍO SECUENCIAL =====
+window.abrirModalCorreoSecuencial = function() {
+    if (!window.envioSecuencial || window.envioSecuencial.indiceActual >= window.envioSecuencial.empleados.length) {
+        console.log('Envío secuencial completado');
+        window.envioSecuencial = null;
+        mostrarNotificacionExito('Todos los correos han sido enviados exitosamente');
+        return;
+    }
+    
+    const { empleados, tipo, indiceActual } = window.envioSecuencial;
+    const rutActual = empleados[indiceActual];
+    
+    console.log(`Abriendo modal para empleado ${indiceActual + 1}/${empleados.length}: ${rutActual}`);
+    
+    // Limpiar modal
+    document.getElementById('formCorreoPreview').reset();
+    document.getElementById('modalAdjuntos').innerHTML = "";
+    document.getElementById('modalContenido').innerHTML = "";
+    
+    // Actualizar título
+    const titulos = {
+        1: "Encuesta Satisfacción sobre proceso R&S",
+        2: "Encuesta Satisfacción sobre Nuevo Trabajador", 
+        3: "Encuesta Eficacia sobre nuevo trabajador",
+        4: "Encuesta Evaluación técnica jefaturas"
+    };
+    
+    const tituloBase = titulos[tipo] || "Preview Correo POST";
+    document.getElementById('modalCorreoTitulo').textContent = `${tituloBase} (${indiceActual + 1}/${empleados.length})`;
+    
+    // Crear o actualizar información del modo secuencial
+    const infoModo = document.getElementById('modalInfoModo') || crearElementoInfoModo();
+    infoModo.innerHTML = `
+        <div class="modo-info secuencial">
+            <i class='bx bx-send'></i>
+            <strong>Modo: Envío Secuencial</strong> - Enviando correo ${indiceActual + 1} de ${empleados.length}
+            <br><small>RUT actual: ${rutActual}</small>
+            <div class="progreso-secuencial">
+                <div class="barra-progreso">
+                    <div class="progreso-actual" style="width: ${((indiceActual + 1) / empleados.length) * 100}%"></div>
+                </div>
+                <span class="texto-progreso">${indiceActual + 1}/${empleados.length}</span>
+            </div>
+        </div>
+    `;
+    
+    // Cargar preview para el empleado actual
+    let url = `?handler=CorreoPreview&tipo=${tipo}&rut=${encodeURIComponent(rutActual)}&modo=secuencial`;
+    
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('modalAsunto').value = data.asunto || "";
+            document.getElementById('modalDestinatarios').value = data.destinatarios || "";
+            document.getElementById('modalCC').value = data.cc || "";
+            document.getElementById('modalCCO').value = data.cco || "";
+            document.getElementById('modalContenido').innerHTML = data.contenido || "";
+            
+            const adjuntosDiv = document.getElementById('modalAdjuntos');
+            adjuntosDiv.innerHTML = "";
+            if (data.adjuntos && Array.isArray(data.adjuntos)) {
+                data.adjuntos.forEach(function (adj) {
+                    const link = document.createElement('a');
+                    link.textContent = adj;
+                    link.href = '/adjuntos/' + adj; 
+                    link.target = '_blank';
+                    link.className = "adjunto-item";
+                    adjuntosDiv.appendChild(link);
+                    adjuntosDiv.appendChild(document.createElement('br'));
+                });
+            }
+            
+            // Guardar información para el envío individual
+            window.correoEnvioInfo = {
+                tipo: tipo,
+                empleados: [rutActual],
+                modo: 'secuencial-individual',
+                rutActual: rutActual
+            };
+        })
+        .catch(error => {
+            console.error('Error al cargar preview secuencial:', error);
+            mostrarNotificacionError('Error al cargar el preview del correo');
+        });
+    
+    // Mostrar modal
+    document.getElementById('modal-correo-unico').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+};
+
+
+// Función para crear elemento de información del modo
+function crearElementoInfoModo() {
+    const modalContent = document.querySelector('#modal-correo-unico .modal-content');
+    const form = document.getElementById('formCorreoPreview');
+    
+    const infoDiv = document.createElement('div');
+    infoDiv.id = 'modalInfoModo';
+    infoDiv.style.cssText = 'margin-bottom: 15px; padding: 10px; border-radius: 6px; border-left: 4px solid #007bff; background: #f8f9fa;';
+    
+    modalContent.insertBefore(infoDiv, form);
+    return infoDiv;
+}
+
+
+        // ===== FUNCIONES PARA MODAL DE EDICIÓN =====
+        window.abrirModalEditarEmpleado = function (rut) {
+            // Limpiar y resetear modal
+            document.getElementById('formEditarEmpleado').reset();
+            
+            // Ocultar grupos de edición
+            document.getElementById('analistaSelectGroup').style.display = 'none';
+            document.getElementById('analistaDisplayGroup').style.display = 'block';
+            document.getElementById('gerenciaSelectGroup').style.display = 'none';
+            document.getElementById('gerenciaDisplayGroup').style.display = 'block';
+            document.getElementById('ubicacionSelectGroup').style.display = 'none';
+            document.getElementById('ubicacionDisplayGroup').style.display = 'block';
+
+            // Cargar datos del empleado
+            fetch('/PostInducciones/index_POST?handler=Empleado&rut=' + rut)
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Datos recibidos del empleado:", data);
+                    
+                    // Llenar campos básicos
+                    document.getElementById('editRut').value = data.rut || "";
+                    document.getElementById('editNombre').value = data.nombre || "";
+                    document.getElementById('editApellidoPaterno').value = data.apellido_Paterno || "";
+                    document.getElementById('editApellidoMaterno').value = data.apellido_Materno || "";
+                    document.getElementById('editFechaNacimiento').value = data.fecha_Nacimiento ? data.fecha_Nacimiento.substring(0,10) : "";
+                    document.getElementById('editCorreo').value = data.correo || "";
+                    document.getElementById('editTelefono').value = data.telefono || "";
+                    document.getElementById('editDireccion').value = data.direccion || "";
+                    document.getElementById('editSociedad').value = data.sociedad || "";
+                    document.getElementById('editCargo').value = data.cargo || "";
+                    document.getElementById('editGerenciaMail').value = data.gerencia_mail || "";
+                    document.getElementById('editReemplazo').value = data.quienrepone || "";
+                    document.getElementById('editJefeDirecto').value = data.jefe_Directo || "";
+                    document.getElementById('editTicket').value = data.ticket || "";
+                    document.getElementById('editCarrera').value = data.carrera || "";
+                    document.getElementById('editUniversidad').value = data.universidad || "";
+        
+                    
+                    // Fechas sin conversión de zona horaria
+                    if (data.fecha_Induccion) {
+                        const fechaInd = new Date(data.fecha_Induccion + 'T00:00:00');
+                        document.getElementById('editFechaInduccion').value = fechaInd.toISOString().substring(0,10);
+                    }
+                    if (data.fecha_Ingreso) {
+                        const fechaIng = new Date(data.fecha_Ingreso + 'T00:00:00');
+                        document.getElementById('editFechaIngreso').value = fechaIng.toISOString().substring(0,10);
+                    }
+
+                    // ===== MANEJO ESPECIAL PARA TIPO DE CONTRATO =====
+                    const tipoContratoValue = data.tipo_de_Contrato || "";
+                    const contratoValue = data.contrato || "";
+                    
+                    // Mapear el tipo de contrato basado en el contenido del campo Contrato
+                    let tipoContratoMapeado = "";
+                    if (contratoValue.toLowerCase().includes("indefinido")) {
+                        tipoContratoMapeado = "Indefinido";
+                    } else if (contratoValue.toLowerCase().includes("plazo fijo") || contratoValue.toLowerCase().includes("reposición")) {
+                        tipoContratoMapeado = "Reposición";
+                    } else if (tipoContratoValue) {
+                        tipoContratoMapeado = tipoContratoValue;
+                    }
+                    
+                    document.getElementById('editTipoContrato').value = tipoContratoMapeado;
+                    document.getElementById('editContrato').value = contratoValue;
+
+                    // ===== CAMPOS ESPECIALES =====
+                    manejarCampoEspecial('analista', data.analista);
+                    manejarCampoEspecial('gerencia', data.gerencia);  
+                    manejarCampoEspecial('ubicacion', data.ubicacion);
+                })
+                .catch(error => {
+                    console.error('Error al cargar empleado:', error);
+                    mostrarNotificacionError('Error al cargar los datos del empleado');
+                });
+
+            document.getElementById('modal-editar-empleado').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        };
+
+        // ===== FUNCIÓN PARA MANEJAR CAMPOS ESPECIALES CON MAPEO (SIN ADVERTENCIAS) =====
+        function manejarCampoEspecial(tipo, valorBD) {
+            const displayInput = document.getElementById(`${tipo}Display`);
+            
+            if (!displayInput) {
+                console.warn(`No se encontró el input display para ${tipo}`);
+                return;
+            }
+
+            // Si no hay valor en BD, dejar vacío
+            if (!valorBD || valorBD.trim() === '') {
+                displayInput.value = '';
+                return;
+            }
+
+            // Buscar coincidencia exacta en las opciones disponibles
+            const dropdown = document.getElementById(`${tipo}Dropdown`);
+            if (!dropdown) {
+                console.warn(`No se encontró el dropdown para ${tipo}`);
+                displayInput.value = valorBD;
+                return;
+            }
+
+            const opciones = dropdown.querySelectorAll('.custom-select-option');
+            let coincidenciaEncontrada = false;
+
+            // 1. Buscar coincidencia exacta
+            opciones.forEach(opcion => {
+                const valorOpcion = opcion.getAttribute('data-value');
+                if (valorOpcion === valorBD) {
+                    displayInput.value = valorBD;
+                    coincidenciaEncontrada = true;
+                }
+            });
+
+            // 2. Si no hay coincidencia exacta, buscar coincidencia parcial
+            if (!coincidenciaEncontrada) {
+                const valorBDLower = valorBD.toLowerCase();
+                
+                opciones.forEach(opcion => {
+                    const valorOpcion = opcion.getAttribute('data-value');
+                    const valorOpcionLower = valorOpcion.toLowerCase();
+                    
+                    if (valorOpcionLower.includes(valorBDLower) || valorBDLower.includes(valorOpcionLower)) {
+                        displayInput.value = valorOpcion;
+                        coincidenciaEncontrada = true;
+                        console.log(`Mapeo encontrado para ${tipo}: "${valorBD}" -> "${valorOpcion}"`);
+                    }
+                });
+            }
+
+            // 3. Si no se encuentra ninguna coincidencia, usar el valor original de BD SIN ADVERTENCIA
+            if (!coincidenciaEncontrada) {
+                displayInput.value = valorBD;
+                console.log(`Valor especial para ${tipo}: "${valorBD}" - Se mantendrá como está`);
+            }
+        }
+
+        // ===== FUNCIONES PARA MODAL DE ELIMINACIÓN =====
+        window.abrirModalEliminarEmpleado = function (rut) {
+            rutEmpleadoAEliminar = rut;
+            
+            // Cargar información del empleado para mostrar en el modal
+            fetch('/PreInducciones/DatosyCorreos/DatosyCorreos?handler=Empleado&rut=' + rut)
+                .then(res => res.json())
+                .then(data => {
+                    datosEmpleadoAEliminar = data;
+                    
+                    // Mostrar información del empleado en el modal
+                    const infoDiv = document.getElementById('infoEmpleadoEliminar');
+                    infoDiv.innerHTML = `
+                        <div class="employee-details">
+                            <div class="detail-row">
+                                <span class="detail-label">RUT:</span>
+                                <span class="detail-value">${data.rut || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Nombre:</span>
+                                <span class="detail-value">${(data.nombre || '') + ' ' + (data.apellido_Paterno || '') + ' ' + (data.apellido_Materno || '')}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Cargo:</span>
+                                <span class="detail-value">${data.cargo || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Gerencia:</span>
+                                <span class="detail-value">${data.gerencia || 'N/A'}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Actualizar el campo hidden para administradores
+                    const rutHidden = document.getElementById('rutEliminarAdmin');
+                    if (rutHidden) {
+                        rutHidden.value = rut;
+                    }
+                    
+                    // Actualizar mensajes según el tipo de usuario
+                    const esAdmin = @(Model.EsAdmin ? "true" : "false");
+                    const titulo = document.getElementById('tituloEliminar');
+                    const mensaje = document.getElementById('mensajeAdvertencia');
+                    
+                    if (esAdmin) {
+                        titulo.textContent = 'Confirmar Eliminación';
+                        mensaje.innerHTML = '<i class="bx bx-error-circle"></i> Esta acción eliminará permanentemente al empleado del sistema. No se puede deshacer.';
+                    } else {
+                        titulo.textContent = 'Solicitar Eliminación';
+                        mensaje.innerHTML = '<i class="bx bx-info-circle"></i> Se enviará una solicitud al administrador para eliminar este empleado.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar datos del empleado:', error);
+                    const infoDiv = document.getElementById('infoEmpleadoEliminar');
+                    infoDiv.innerHTML = '<div class="error-message">Error al cargar información del empleado</div>';
+                    mostrarNotificacionError('Error al cargar información del empleado');
+                });
+            
+            document.getElementById('modal-eliminar-empleado').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        };
+
+        // ===== FUNCIÓN PARA SOLICITAR ELIMINACIÓN =====
+        const btnSolicitarEliminacion = document.getElementById('btnSolicitarEliminacion');
+        if (btnSolicitarEliminacion) {
+            btnSolicitarEliminacion.addEventListener('click', function() {
+                if (!rutEmpleadoAEliminar || !datosEmpleadoAEliminar) {
+                    mostrarNotificacionError('Error: No se pudo identificar el empleado a eliminar');
+                    return;
+                }
+                
+                // Preparar datos para la solicitud de eliminación
+                const solicitudEliminacion = {
+                    RUT: rutEmpleadoAEliminar,
+                    Tipo: 'Eliminacion',
+                    DatosEmpleado: datosEmpleadoAEliminar,
+                    Motivo: 'Solicitud de eliminación de empleado'
+                };
+                
+                // Enviar solicitud
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/PreInducciones/DatosyCorreos/DatosyCorreos?handler=SolicitarEliminacion', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                if (token) {
+                    xhr.setRequestHeader('RequestVerificationToken', token);
+                }
+                
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.success) {
+                                mostrarNotificacionExito(data.message || "Solicitud de eliminación enviada correctamente");
+                                cerrarModalEliminarEmpleado();
+                            } else {
+                                mostrarNotificacionError(data.error || "Error al enviar solicitud");
+                            }
+                        } catch (e) {
+                            console.error("Error al parsear respuesta:", e);
+                            mostrarNotificacionError('Error al procesar la respuesta del servidor');
+                        }
+                    } else {
+                        mostrarNotificacionError(`Error ${xhr.status}: ${xhr.statusText}`);
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    mostrarNotificacionError('Error de conexión al servidor');
+                };
+                
+                xhr.send(JSON.stringify(solicitudEliminacion));
+            });
+        }
+
+        // ===== EVENTOS PARA EDICIÓN DE CAMPOS ESPECIALES =====
+        const btnEditarAnalista = document.getElementById('btnEditarAnalista');
+        if (btnEditarAnalista) {
+            btnEditarAnalista.addEventListener('click', function () {
+                document.getElementById('analistaDisplayGroup').style.display = 'none';
+                document.getElementById('analistaSelectGroup').style.display = 'block';
+                
+                // Transferir el valor actual al campo de edición
+                const valorActual = document.getElementById('analistaDisplay').value;
+                document.getElementById('editAnalista').value = valorActual;
+                document.getElementById('editAnalista').focus();
+            });
+        }
+        
+        const btnCancelarAnalista = document.getElementById('btnCancelarAnalista');
+        if (btnCancelarAnalista) {
+            btnCancelarAnalista.addEventListener('click', function () {
+                // Valor que el usuario escribió
+                const valorActual = document.getElementById('editAnalista').value;
+                document.getElementById('analistaDisplay').value = valorActual;
+                
+                document.getElementById('analistaDisplayGroup').style.display = 'block';
+                document.getElementById('analistaSelectGroup').style.display = 'none';
+            });
+        }
+
+        const btnEditarGerencia = document.getElementById('btnEditarGerencia');
+        if (btnEditarGerencia) {
+            btnEditarGerencia.addEventListener('click', function () {
+                document.getElementById('gerenciaDisplayGroup').style.display = 'none';
+                document.getElementById('gerenciaSelectGroup').style.display = 'block';
+                
+                // Transferir el valor actual al campo de edición
+                const valorActual = document.getElementById('gerenciaDisplay').value;
+                document.getElementById('editGerencia').value = valorActual;
+                document.getElementById('editGerencia').focus();
+            });
+        }
+        
+        const btnCancelarGerencia = document.getElementById('btnCancelarGerencia');
+        if (btnCancelarGerencia) {
+            btnCancelarGerencia.addEventListener('click', function () {
+                // Valor que el usuario escribió
+                const valorActual = document.getElementById('editGerencia').value;
+                document.getElementById('gerenciaDisplay').value = valorActual;
+                
+                document.getElementById('gerenciaDisplayGroup').style.display = 'block';
+                document.getElementById('gerenciaSelectGroup').style.display = 'none';
+            });
+        }
+
+        const btnEditarUbicacion = document.getElementById('btnEditarUbicacion');
+        if (btnEditarUbicacion) {
+            btnEditarUbicacion.addEventListener('click', function () {
+                document.getElementById('ubicacionDisplayGroup').style.display = 'none';
+                document.getElementById('ubicacionSelectGroup').style.display = 'block';
+                
+                // Transferir el valor actual al campo de edición
+                const valorActual = document.getElementById('ubicacionDisplay').value;
+                document.getElementById('editUbicacion').value = valorActual;
+                document.getElementById('editUbicacion').focus();
+            });
+        }
+        
+        const btnCancelarUbicacion = document.getElementById('btnCancelarUbicacion');
+        if (btnCancelarUbicacion) {
+            btnCancelarUbicacion.addEventListener('click', function () {
+                // Valor que el usuario escribió
+                const valorActual = document.getElementById('editUbicacion').value;
+                document.getElementById('ubicacionDisplay').value = valorActual;
+                
+                document.getElementById('ubicacionDisplayGroup').style.display = 'block';
+                document.getElementById('ubicacionSelectGroup').style.display = 'none';
+            });
+        }
+
+        // ===== INTERCEPCIÓN DEL FORMULARIO PARA ADMINISTRADORES =====
+        const formEditarEmpleado = document.getElementById('formEditarEmpleado');
+        if (formEditarEmpleado) {
+            formEditarEmpleado.addEventListener('submit', function(e) {
+                // Solo interceptar si es un administrador
+                const btnSubmit = this.querySelector('button[type="submit"]');
+                if (btnSubmit) {
+                    e.preventDefault(); 
+                    
+                    console.log("Interceptando envío de formulario para administrador");
+                    
+                    // SINCRONIZAR campos especiales antes del envío
+                    sincronizarCamposEspeciales();
+                    
+                    // Crear FormData con todos los datos del formulario
+                    const formData = new FormData(this);
+                    
+                    // Asegurar que los campos especiales se incluyan correctamente
+                    const analistaValue = document.getElementById('analistaDisplay').value || 
+                                         document.getElementById('editAnalista').value || '';
+                    const gerenciaValue = document.getElementById('gerenciaDisplay').value || 
+                                         document.getElementById('editGerencia').value || '';
+                    const ubicacionValue = document.getElementById('ubicacionDisplay').value || 
+                                          document.getElementById('editUbicacion').value || '';
+                    
+                    // Actualizar o agregar los campos especiales al FormData
+                    formData.set('Analista', analistaValue);
+                    formData.set('Gerencia', gerenciaValue);
+                    formData.set('Ubicacion', ubicacionValue);
+                    
+                    console.log("Datos del formulario (Admin):", {
+                        analista: analistaValue,
+                        gerencia: gerenciaValue,
+                        ubicacion: ubicacionValue
+                    });
+                    
+                    // Obtener el token CSRF
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    
+                    // Crear solicitud fetch
+                    const fetchOptions = {
+                        method: 'POST',
+                        body: formData
+                    };
+                    
+                    // Agregar token si existe
+                    if (token) {
+                        fetchOptions.headers = {
+                            'RequestVerificationToken': token
+                        };
+                    }
+                    
+                    // Enviar solicitud
+                    fetch('/PreInducciones/DatosyCorreos/DatosyCorreos?handler=EditarEmpleado', fetchOptions)
+                        .then(response => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error(`Error ${response.status}: ${response.statusText}`);
+                            }
+                        })
+                        .then(html => {
+                            // Si la respuesta es HTML, significa que se recargó la página con éxito
+                            if (html.includes('<!DOCTYPE html') || html.includes('<html')) {
+                                mostrarNotificacionExito('Empleado editado correctamente');
+                                cerrarModalEditarEmpleado();
+                                
+                                // Recargar la página después de un breve delay
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1500);
+                            } else {
+                                try {
+                                    const data = JSON.parse(html);
+                                    if (data.success) {
+                                        mostrarNotificacionExito(data.message || 'Empleado editado correctamente');
+                                        cerrarModalEditarEmpleado();
+                                        setTimeout(() => {
+                                            window.location.reload();
+                                        }, 1500);
+                                    } else {
+                                        mostrarNotificacionError(data.error || 'Error al editar empleado');
+                                    }
+                                } catch (e) {
+                                    mostrarNotificacionExito('Empleado editado correctamente');
+                                    cerrarModalEditarEmpleado();
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 1500);
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error al editar empleado:', error);
+                            mostrarNotificacionError('Error al editar empleado: ' + error.message);
+                        });
+                }
+            });
+        }
+
+        // ===== SOLICITAR CAMBIOS PARA USUARIOS NO ADMIN =====
+        const btnSolicitarCambios = document.getElementById('btnSolicitarCambios');
+        if (btnSolicitarCambios) {
+            btnSolicitarCambios.addEventListener('click', function () {
+                const formEditarEmpleado = document.getElementById('formEditarEmpleado');
+                
+                // SINCRONIZAR campos especiales antes del envío
+                sincronizarCamposEspeciales();
+                
+                // Obtener datos del formulario directamente
+                const formData = new FormData(formEditarEmpleado);
+                const datos = {};
+                formData.forEach((value, key) => {
+                    datos[key] = value;
+                });
+                
+                // Asegurar que los campos especiales se incluyan correctamente
+                datos['Analista'] = document.getElementById('analistaDisplay').value || 
+                                   document.getElementById('editAnalista').value || '';
+                datos['Gerencia'] = document.getElementById('gerenciaDisplay').value || 
+                                   document.getElementById('editGerencia').value || '';
+                datos['Ubicacion'] = document.getElementById('ubicacionDisplay').value || 
+                                    document.getElementById('editUbicacion').value || '';
+                
+                console.log("Datos a enviar (incluyendo casos especiales):", datos);
+                
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/PreInducciones/DatosyCorreos/DatosyCorreos?handler=SolicitarEdicion', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                if (token) {
+                    xhr.setRequestHeader('RequestVerificationToken', token);
+                }
+                
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.success) {
+                                mostrarNotificacionExito(data.message || "Solicitud enviada correctamente");
+                                cerrarModalEditarEmpleado();
+                            } else {
+                                mostrarNotificacionError(data.error || "Error al enviar solicitud");
+                            }
+                        } catch (e) {
+                            console.error("Error al parsear la respuesta JSON:", e);
+                            mostrarNotificacionError('Error al procesar la respuesta del servidor');
+                        }
+                    } else {
+                        mostrarNotificacionError(`Error ${xhr.status}: ${xhr.statusText}`);
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    mostrarNotificacionError('Error de conexión al servidor');
+                };
+                
+                xhr.send(JSON.stringify(datos));
+            });
+        }
+
+        // ===== FUNCIÓN PARA SINCRONIZAR CAMPOS ESPECIALES =====
+        function sincronizarCamposEspeciales() {
+            console.log("=== SINCRONIZANDO CAMPOS ESPECIALES ===");
+            
+            // Analista
+            const analistaDisplay = document.getElementById('analistaDisplay');
+            const analistaEdit = document.getElementById('editAnalista');
+            const analistaName = document.querySelector('input[name="Analista"]');
+            
+            if (analistaDisplay) {
+                // Usar el valor del campo edit si está visible, sino el display
+                const analistaSelectGroup = document.getElementById('analistaSelectGroup');
+                const valorAnalista = (analistaSelectGroup && analistaSelectGroup.style.display !== 'none') 
+                                     ? (analistaEdit?.value || analistaDisplay.value)
+                                     : analistaDisplay.value;
+                
+                // Actualizar todos los campos relacionados
+                if (analistaEdit) analistaEdit.value = valorAnalista;
+                analistaDisplay.value = valorAnalista;
+                if (analistaName) analistaName.value = valorAnalista;
+                
+                console.log(`Analista sincronizado: "${valorAnalista}"`);
+            }
+            
+            // Gerencia
+            const gerenciaDisplay = document.getElementById('gerenciaDisplay');
+            const gerenciaEdit = document.getElementById('editGerencia');
+            const gerenciaName = document.querySelector('input[name="Gerencia"]');
+            
+            if (gerenciaDisplay) {
+                // Usar el valor del campo edit si está visible, sino el display
+                const gerenciaSelectGroup = document.getElementById('gerenciaSelectGroup');
+                const valorGerencia = (gerenciaSelectGroup && gerenciaSelectGroup.style.display !== 'none') 
+                                     ? (gerenciaEdit?.value || gerenciaDisplay.value)
+                                     : gerenciaDisplay.value;
+                
+                // Actualizar todos los campos relacionados
+                if (gerenciaEdit) gerenciaEdit.value = valorGerencia;
+                gerenciaDisplay.value = valorGerencia;
+                if (gerenciaName) gerenciaName.value = valorGerencia;
+                
+                console.log(`Gerencia sincronizada: "${valorGerencia}"`);
+            }
+            
+            // Ubicación
+            const ubicacionDisplay = document.getElementById('ubicacionDisplay');
+            const ubicacionEdit = document.getElementById('editUbicacion');
+            const ubicacionName = document.querySelector('input[name="Ubicacion"]');
+            
+            if (ubicacionDisplay) {
+                // Usar el valor del campo edit si está visible, sino el display
+                const ubicacionSelectGroup = document.getElementById('ubicacionSelectGroup');
+                const valorUbicacion = (ubicacionSelectGroup && ubicacionSelectGroup.style.display !== 'none') 
+                                      ? (ubicacionEdit?.value || ubicacionDisplay.value)
+                                      : ubicacionDisplay.value;
+                
+                // Actualizar todos los campos relacionados
+                if (ubicacionEdit) ubicacionEdit.value = valorUbicacion;
+                ubicacionDisplay.value = valorUbicacion;
+                if (ubicacionName) ubicacionName.value = valorUbicacion;
+                
+                console.log(`Ubicación sincronizada: "${valorUbicacion}"`);
+            }
+            
+            console.log("=== FIN SINCRONIZACIÓN ===");
+        }
+
+        // ===== FUNCIONES PARA CERRAR MODALES =====
+        window.cerrarModalEliminarEmpleado = function () {
+            rutEmpleadoAEliminar = null;
+            datosEmpleadoAEliminar = null;
+            document.getElementById('modal-eliminar-empleado').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        window.cerrarModalEditarEmpleado = function () {
+            document.getElementById('modal-editar-empleado').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        window.cerrarModalCorreo = function() {
+            document.getElementById('modal-correo-unico').style.display = 'none';
+            document.getElementById('modalOverlay').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        // ===== FUNCIONES DE FORMATEO =====
+        window.setContratoIndefinido = function () {
+            const tipoContrato = document.getElementById('editTipoContrato');
+            const contrato = document.getElementById('editContrato');
+            let prefix = '';
+
+            if (tipoContrato.value === 'Reposición') {
+                prefix = 'Plazo Fijo ';
+            } else if (tipoContrato.value === 'Indefinido') {
+                prefix = 'Indefinido.';
+            } else {
+                contrato.value = '';
+                return;
+            }
+
+            if (!contrato.value.startsWith(prefix)) {
+                contrato.value = prefix;
+            }
+            setTimeout(() => {
+                contrato.setSelectionRange(contrato.value.length, contrato.value.length);
+            }, 0);
+        };
+
+        window.capitalizeFirstLetter = function (input) {
+            if (input.value) {
+                input.value = input.value.charAt(0).toUpperCase() + input.value.slice(1);
+            }
+        };
+
+        window.formatTelefono = function () {
+            const telefonoInput = document.getElementById('editTelefono');
+            let telefono = telefonoInput.value.replace(/[^0-9]/g, '');
+
+            if (telefono.length > 0) {
+                if (!telefono.startsWith('569')) {
+                    telefono = '56 9 ' + telefono;
+                }
+
+                if (telefono.length > 20) {
+                    telefono = telefono.substring(0, 20);
+                }
+
+                telefonoInput.value = '+' + telefono;
+            }
+        };
+
+        window.formatRUT = function () {
+            const rutInput = document.getElementById('editRut');
+            let rut = rutInput.value.replace(/[^0-9kK]/g, '');
+
+            if (rut.length > 1) {
+                const dv = rut.slice(-1);
+                const rutBody = rut.slice(0, -1);
+
+                let formatted = '';
+                for (let i = rutBody.length - 1, j = 0; i >= 0; i--, j++) {
+                    formatted = rutBody[i] + formatted;
+                    if (j === 2 && i !== 0) {
+                        formatted = '.' + formatted;
+                        j = -1;
+                    }
+                }
+
+                rutInput.value = formatted + '-' + dv;
+            }
+        };
+
+        // ===== EVENT LISTENERS PARA FORMATEO =====
+        const fechaInduccion = document.getElementById('editFechaInduccion');
+        const fechaIngreso = document.getElementById('editFechaIngreso');
+        const tipoContrato = document.getElementById('editTipoContrato');
+        const nombre = document.getElementById('editNombre');
+        const apellidoPaterno = document.getElementById('editApellidoPaterno');
+        const apellidoMaterno = document.getElementById('editApellidoMaterno');
+        const telefono = document.getElementById('editTelefono');
+        const rut = document.getElementById('editRut');
+
+        if (fechaInduccion && fechaIngreso) {
+            fechaInduccion.addEventListener('change', function () {
+                fechaIngreso.value = this.value;
+            });
+
+            fechaIngreso.addEventListener('change', function () {
+                fechaInduccion.value = this.value;
+            });
+        }
+
+        if (tipoContrato) {
+            tipoContrato.addEventListener('change', setContratoIndefinido);
+        }
+
+        if (nombre) {
+            nombre.addEventListener('blur', function() { capitalizeFirstLetter(this); });
+        }
+
+        if (apellidoPaterno) {
+            apellidoPaterno.addEventListener('blur', function() { capitalizeFirstLetter(this); });
+        }
+
+        if (apellidoMaterno) {
+            apellidoMaterno.addEventListener('blur', function() { capitalizeFirstLetter(this); });
+        }
+
+        if (telefono) {
+            telefono.addEventListener('blur', formatTelefono);
+        }
+
+        if (rut) {
+            rut.addEventListener('blur', formatRUT);
+        }
+
+        // ===== RESET MODALES AL CARGAR =====
+        document.getElementById('modal-editar-empleado').style.display = 'none';
+        document.getElementById('modal-eliminar-empleado').style.display = 'none';
+        var overlay = document.getElementById('modalOverlay');
+        if (overlay) overlay.style.display = 'none';
+
+        // ===== INICIALIZAR DROPDOWNS PERSONALIZADOS =====
+        createCustomDropdown('editAnalista', 'analistaDropdown');
+        createCustomDropdown('editGerencia', 'gerenciaDropdown');
+        createCustomDropdown('editUbicacion', 'ubicacionDropdown');
+    });
+
+    // ===== FUNCIÓN PARA CREAR DROPDOWN =====
+    function createCustomDropdown(inputId, dropdownId) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        
+        if (!input || !dropdown) {
+            console.warn(`No se pudo crear dropdown personalizado para ${inputId}`);
+            return;
+        }
+        
+        // Mostrar dropdown al hacer focus
+        input.addEventListener('focus', function() {
+            dropdown.classList.add('show');
+            filterOptions('');
+        });
+        
+        // Filtrar opciones mientras escribes
+        input.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            filterOptions(query);
+            
+            // Actualizar también el campo display correspondiente en tiempo real
+            const fieldType = inputId.replace('edit', '').toLowerCase();
+            const displayInput = document.getElementById(`${fieldType}Display`);
+            if (displayInput) {
+                displayInput.value = this.value;
+            }
+        });
+        
+        // Ocultar dropdown al perder focus (con delay para permitir click en opciones)
+        input.addEventListener('blur', function() {
+            setTimeout(() => {
+                dropdown.classList.remove('show');
+            }, 200);
+        });
+        
+        // Función para filtrar opciones
+        function filterOptions(query) {
+            const options = dropdown.querySelectorAll('.custom-select-option');
+            let hasVisibleOptions = false;
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                const value = option.getAttribute('data-value').toLowerCase();
+                
+                // Buscar en texto visible y en el valor
+                if (text.includes(query) || value.includes(query)) {
+                    option.style.display = 'flex';
+                    hasVisibleOptions = true;
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // PERMITIR TEXTO LIBRE
+            if (query && !hasVisibleOptions) {
+                console.log(`Texto libre permitido para: "${query}"`);
+            }
+        }
+        
+        // Manejar click en opciones
+        dropdown.addEventListener('click', function(e) {
+            const option = e.target.closest('.custom-select-option');
+            if (option) {
+                const value = option.getAttribute('data-value');
+                input.value = value;
+                dropdown.classList.remove('show');
+                
+                // Actualizar también el campo display correspondiente
+                const fieldType = inputId.replace('edit', '').toLowerCase();
+                const displayInput = document.getElementById(`${fieldType}Display`);
+                if (displayInput) {
+                    displayInput.value = value;
+                }
+            }
+        });
+        
+        // Manejar navegación con teclado
+        input.addEventListener('keydown', function(e) {
+            const visibleOptions = Array.from(dropdown.querySelectorAll('.custom-select-option'))
+                .filter(option => option.style.display !== 'none');
+            
+            let currentSelected = dropdown.querySelector('.custom-select-option.selected');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                
+                if (currentSelected) {
+                    currentSelected.classList.remove('selected');
+                    const currentIndex = visibleOptions.indexOf(currentSelected);
+                    const nextIndex = (currentIndex + 1) % visibleOptions.length;
+                    currentSelected = visibleOptions[nextIndex];
+                } else {
+                    currentSelected = visibleOptions[0];
+                }
+                
+                if (currentSelected) {
+                    currentSelected.classList.add('selected');
+                    currentSelected.scrollIntoView({ block: 'nearest' });
+                }
+                
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                
+                if (currentSelected) {
+                    currentSelected.classList.remove('selected');
+                    const currentIndex = visibleOptions.indexOf(currentSelected);
+                    const prevIndex = currentIndex > 0 ? currentIndex - 1 : visibleOptions.length - 1;
+                    currentSelected = visibleOptions[prevIndex];
+                } else {
+                    currentSelected = visibleOptions[visibleOptions.length - 1];
+                }
+                
+                if (currentSelected) {
+                    currentSelected.classList.add('selected');
+                    currentSelected.scrollIntoView({ block: 'nearest' });
+                }
+                
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                
+                if (currentSelected) {
+                    const value = currentSelected.getAttribute('data-value');
+                    input.value = value;
+                    dropdown.classList.remove('show');
+                    
+                    // Actualizar también el campo display correspondiente
+                    const fieldType = inputId.replace('edit', '').toLowerCase();
+                    const displayInput = document.getElementById(`${fieldType}Display`);
+                    if (displayInput) {
+                        displayInput.value = value;
+                    }
+                }
+                
+            } else if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+                
+            } else {
+                // Limpiar selección al escribir
+                if (currentSelected) {
+                    currentSelected.classList.remove('selected');
+                }
+            }
+        });
+    }
+
+    // ===== FUNCIONES PARA NOTIFICACIONES DINÁMICAS MEJORADAS =====
+    function mostrarNotificacion(tipo, titulo, mensaje) {
+        const iconos = {
+            success: 'bx-check-circle',
+            error: 'bx-error-circle',
+            warning: 'bx-error-circle',
+            info: 'bx-info-circle'
+        };
+        
+        const notificacion = document.createElement('div');
+        notificacion.className = `notification-popup alert-${tipo}`;
+        notificacion.innerHTML = `
+            <div class="notification-icon">
+                <i class='bx ${iconos[tipo]}'></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">${titulo}</div>
+                <div class="notification-message">${mensaje}</div>
+            </div>
+            <button class="notification-close" onclick="this.parentElement.remove()">
+                <i class='bx bx-x'></i>
+            </button>
+        `;
+
+        // Posicionar según notificaciones existentes
+        const notificacionesExistentes = document.querySelectorAll('.notification-popup');
+        notificacion.style.top = (20 + (notificacionesExistentes.length * 80)) + 'px';
+
+        document.body.appendChild(notificacion);
+
+        // Animar entrada
+        setTimeout(() => {
+            notificacion.style.transform = 'translateX(0)';
+            notificacion.style.opacity = '1';
+        }, 100);
+
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            if (notificacion.parentElement) {
+                notificacion.style.transform = 'translateX(100%)';
+                notificacion.style.opacity = '0';
+                setTimeout(() => {
+                    if (notificacion.parentElement) {
+                        notificacion.remove();
+                        reposicionarNotificaciones();
+                    }
+                }, 400);
+            }
+        }, 5000);
+
+        // Pausar auto-cierre al hacer hover
+        notificacion.addEventListener('mouseenter', function() {
+            this.style.animationPlayState = 'paused';
+        });
+        
+        notificacion.addEventListener('mouseleave', function() {
+            this.style.animationPlayState = 'running';
+        });
+
+        return notificacion;
+    }
+
+    function reposicionarNotificaciones() {
+        const notificaciones = document.querySelectorAll('.notification-popup');
+        notificaciones.forEach((notif, index) => {
+            notif.style.top = (20 + (index * 80)) + 'px';
+        });
+    }
+
+    // Funciones específicas por tipo
+    function mostrarNotificacionError(mensaje) {
+        mostrarNotificacion('error', 'Error', mensaje);
+    }
+
+    function mostrarNotificacionExito(mensaje) {
+        mostrarNotificacion('success', 'Éxito', mensaje);
+    }
+
+    function mostrarNotificacionAdvertencia(mensaje) {
+        mostrarNotificacion('warning', 'Advertencia', mensaje);
+    }
+
+    function mostrarNotificacionInfo(mensaje) {
+        mostrarNotificacion('info', 'Información', mensaje);
+    }
+
+    // ===== FUNCIÓN PARA DEBUG SIN ADVERTENCIAS =====
+    function mostrarDebugMapeo() {
+        console.log("=== DEBUG DE MAPEO (SIN RESTRICCIONES) ===");
+        
+        ['analista', 'gerencia', 'ubicacion'].forEach(tipo => {
+            const dropdown = document.getElementById(`${tipo}Dropdown`);
+            const display = document.getElementById(`${tipo}Display`);
+            const edit = document.getElementById(`edit${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            
+            if (dropdown && display) {
+                console.log(`${tipo.toUpperCase()}:`);
+                console.log(`  Valor display: "${display.value}"`);
+                if (edit) console.log(`  Valor edit: "${edit.value}"`);
+                
+                const opciones = Array.from(dropdown.querySelectorAll('.custom-select-option'));
+                console.log(`  Opciones predefinidas:`, opciones.map(o => o.getAttribute('data-value')));
+                
+                // Verificar si el valor actual está en las opciones
+                const valorEnOpciones = opciones.some(o => o.getAttribute('data-value') === display.value);
+                console.log(`  ¿Valor en opciones?: ${valorEnOpciones ? 'Sí' : 'No (caso especial permitido)'}`);
+            }
+        });
+        
+        console.log("=== FIN DEBUG ===");
+    }
+
+    // ===== FUNCIÓN PARA VALIDAR ENVÍO =====
+    function validarFormularioEdicion() {
+        // Obtener valores actuales de los campos especiales
+        const analista = document.getElementById('analistaDisplay').value || 
+                        document.getElementById('editAnalista').value;
+        const gerencia = document.getElementById('gerenciaDisplay').value || 
+                        document.getElementById('editGerencia').value;
+        const ubicacion = document.getElementById('ubicacionDisplay').value || 
+                         document.getElementById('editUbicacion').value;
+        
+        console.log('Valores a enviar:', {
+            analista: analista,
+            gerencia: gerencia,
+            ubicacion: ubicacion
+        });
+        
+        // Actualizar campos hidden si existen
+        const analistaHidden = document.querySelector('input[name="Analista"]');
+        const gerenciaHidden = document.querySelector('input[name="Gerencia"]');
+        const ubicacionHidden = document.querySelector('input[name="Ubicacion"]');
+        
+        if (analistaHidden) analistaHidden.value = analista;
+        if (gerenciaHidden) gerenciaHidden.value = gerencia;
+        if (ubicacionHidden) ubicacionHidden.value = ubicacion;
+        
+        return true; // SIEMPRE permitir el envío
+    }
+
+// ===== FUNCIÓN  PARA NOTIFICACIÓN DE EFICACIA =====
+window.abrirModalCorreoEficacia = function () {
+    const empleadosAfectados = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.EmpleadosEficacia90Dias.Select(e => e.RUT).ToList()
+    ));
+    
+    if (empleadosAfectados.length === 0) {
+        mostrarNotificacionError("No hay empleados para enviar correo de eficacia");
+        return;
+    }
+
+    // Usar la nueva función pero con empleados específicos
+    document.getElementById('formCorreoPreview').reset();
+    document.getElementById('modalAdjuntos').innerHTML = "";
+    document.getElementById('modalContenido').innerHTML = "";
+
+    document.getElementById('modalCorreoTitulo').textContent = "Encuesta Eficacia sobre nuevo trabajador";
+
+    // Crear elemento de información si no existe
+    const infoModo = document.getElementById('modalInfoModo') || crearElementoInfoModo();
+    infoModo.innerHTML = `
+        <div class="modo-info eficacia">
+            <i class='bx bx-calendar-check'></i>
+            <strong>Modo: Notificación de Eficacia</strong> - Se enviarán correos individuales a ${empleadosAfectados.length} empleado(s) que cumplen 90 días
+        </div>
+    `;
+
+    // Obtener preview del primer empleado
+    let url = `?handler=CorreoPreview&tipo=3&rut=${encodeURIComponent(empleadosAfectados[0])}&modo=eficacia`;
+
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('modalAsunto').value = data.asunto || "";
+            document.getElementById('modalDestinatarios').value = data.destinatarios || "";
+            document.getElementById('modalCC').value = data.cc || "";
+            document.getElementById('modalCCO').value = data.cco || "";
+            document.getElementById('modalContenido').innerHTML = data.contenido || "";
+            
+            const adjuntosDiv = document.getElementById('modalAdjuntos');
+            adjuntosDiv.innerHTML = "";
+            if (data.adjuntos && Array.isArray(data.adjuntos)) {
+                data.adjuntos.forEach(adjunto => {
+                    adjuntosDiv.innerHTML += `<div>📎 ${adjunto}</div>`;
+                });
+            }
+            
+            // Guardar información para el envío
+            window.correoEnvioInfo = {
+                tipo: 3,
+                empleados: empleadosAfectados,
+                modo: 'eficacia'
+            };
+        })
+        .catch(error => {
+            console.error('Error al cargar preview de eficacia:', error);
+            mostrarNotificacionError('Error al cargar el preview del correo de eficacia');
+        });
+
+    document.getElementById('modal-correo-unico').style.display = 'block';
+    document.getElementById('modalOverlay').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+};
+window.cerrarNotificacionEficacia = function () {
+    const notificacion = document.getElementById('notificacion-eficacia');
+    if (notificacion) {
+        notificacion.style.animation = 'fadeOutNotification 0.5s ease-in forwards';
+        setTimeout(() => {
+            if (notificacion.parentElement) {
+                notificacion.parentElement.removeChild(notificacion);
+            }
+        }, 500);
+    }
+};
+
+// ===== FUNCIONES PARA EL INDICADOR DE ENVÍO =====
+function mostrarIndicadorEnvio(mensaje = 'Enviando correo...') {
+    const overlay = document.getElementById('sendingOverlay');
+    const messageElement = document.getElementById('sendingMessage');
+    
+    if (overlay && messageElement) {
+        messageElement.textContent = mensaje;
+        overlay.style.display = 'flex';
+        
+        // Deshabilitar el botón de envío para evitar múltiples envíos
+        const btnEnviar = document.querySelector('button[onclick="enviarCorreoDesdeModal()"]');
+        if (btnEnviar) {
+            btnEnviar.disabled = true;
+            btnEnviar.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Enviando...';
+        }
+    }
+}
+
+function actualizarMensajeEnvio(mensaje) {
+    const messageElement = document.getElementById('sendingMessage');
+    if (messageElement) {
+        messageElement.textContent = mensaje;
+    }
+}
+
+function ocultarIndicadorEnvio() {
+    const overlay = document.getElementById('sendingOverlay');
+    
+    if (overlay) {
+        // Añadir un pequeño delay para que el usuario pueda ver el último mensaje
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            
+            // Rehabilitar el botón de envío
+            const btnEnviar = document.querySelector('button[onclick="enviarCorreoDesdeModal()"]');
+            if (btnEnviar) {
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = '<i class="bx bx-send"></i> Enviar Correo';
+            }
+        }, 500);
+    }
+}
+
+// ===== FUNCIÓN PARA ENVIAR CORREO DESDE MODAL POST INDUCCIONES =====
+window.enviarCorreoDesdeModal = function() {
+    // Mostrar indicador de envío
+    mostrarIndicadorEnvio('Preparando el envío del correo electrónico...');
+    
+    const formData = new FormData();
+    
+    // AGREGAR TOKEN CSRF
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+    if (token) {
+        formData.append('__RequestVerificationToken', token);
+    }
+    
+    // Obtener datos del formulario
+    formData.append('asunto', document.getElementById('modalAsunto').value);
+    formData.append('destinatarios', document.getElementById('modalDestinatarios').value);
+    formData.append('cc', document.getElementById('modalCC').value);
+    formData.append('cco', document.getElementById('modalCCO').value);
+    formData.append('contenido', document.getElementById('modalContenido').innerHTML);
+    
+    const tipoCorreo = window.currentTipoCorreo || 1;
+    formData.append('tipoCorreo', tipoCorreo);
+    
+    // Agregar archivos adjuntos MANUALES
+    const archivoInput = document.getElementById('modalAdjuntarArchivo');
+    if (archivoInput && archivoInput.files.length > 0) {
+        console.log(`Adjuntando ${archivoInput.files.length} archivos manuales`);
+        for (let i = 0; i < archivoInput.files.length; i++) {
+            formData.append('adjuntos', archivoInput.files[i]);
+        }
+    }
+    
+    // AGREGAR ADJUNTOS DE LA BASE DE DATOS
+    const adjuntosBD = document.querySelectorAll('#modalAdjuntos .adjunto-item');
+    if (adjuntosBD.length > 0) {
+        console.log(`Agregando ${adjuntosBD.length} adjuntos de la BD`);
+        const nombresAdjuntos = Array.from(adjuntosBD).map(a => a.textContent.trim());
+        formData.append('adjuntosBD', JSON.stringify(nombresAdjuntos));
+    }
+    
+    // Actualizar mensaje
+    actualizarMensajeEnvio('Enviando correo electrónico...');
+    
+    // Enviar con fetch
+    fetch('?handler=EnviarCorreo', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        actualizarMensajeEnvio('Procesando respuesta del servidor...');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            return response.text().then(text => {
+                throw new Error(`El servidor no devolvió JSON válido. Respuesta: ${text}`);
+            });
+        }
+    })
+    .then(data => {
+        actualizarMensajeEnvio('¡Correo enviado exitosamente!');
+        
+        // Ocultar indicador después de mostrar el mensaje de éxito
+        setTimeout(() => {
+            ocultarIndicadorEnvio();
+            
+            if (data.success) {
+                // ===== VERIFICAR SI ES ENVÍO SECUENCIAL =====
+                if (window.envioSecuencial && window.envioSecuencial.modo === 'secuencial') {
+                    mostrarNotificacionExito(`Correo ${window.envioSecuencial.indiceActual + 1} enviado correctamente`);
+                    
+                    // Avanzar al siguiente empleado
+                    window.envioSecuencial.indiceActual++;
+                    
+                    // Cerrar modal actual
+                    cerrarModalCorreo();
+                    
+                    // Abrir siguiente modal después de un breve delay
+                    setTimeout(() => {
+                        abrirModalCorreoSecuencial();
+                    }, 1000);
+                } else {
+                    // Comportamiento normal para envíos no secuenciales
+                    mostrarNotificacionExito(data.message);
+                    cerrarModalCorreo();
+                    
+                    // Si es correo tipo 3, recargar página para actualizar notificaciones
+                    if (tipoCorreo === 3) {
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    }
+                }
+            } else {
+                mostrarNotificacionError(data.error);
+            }
+        }, 1000);
+    })
+    .catch(error => {
+        console.error('Error completo:', error);
+        actualizarMensajeEnvio('Error al enviar el correo');
+        
+        setTimeout(() => {
+            ocultarIndicadorEnvio();
+            mostrarNotificacionError('Error de conexión: ' + error.message);
+            
+            // Si es envío secuencial y hay error, detener el proceso
+            if (window.envioSecuencial) {
+                window.envioSecuencial = null;
+                mostrarNotificacionAdvertencia('Envío secuencial detenido debido a un error');
+            }
+        }, 1000);
+    });
+};
+
+// ===== FUNCIÓN PARA CANCELAR ENVÍO SECUENCIAL =====
+window.cancelarEnvioSecuencial = function() {
+    if (window.envioSecuencial) {
+        const confirmacion = confirm(`¿Estás seguro de que quieres cancelar el envío secuencial? 
+Se han enviado ${window.envioSecuencial.indiceActual} de ${window.envioSecuencial.empleados.length} correos.`);
+        
+        if (confirmacion) {
+            window.envioSecuencial = null;
+            cerrarModalCorreo();
+            mostrarNotificacionInfo('Envío secuencial cancelado');
+        }
+    }
+};
+
+
+// Función para marcar un correo individual como enviado
+function marcarCorreoComoEnviado(rut, tipoCorreo) {
+    const data = {
+        ruts: [rut],
+        tipoCorreo: tipoCorreo
+    };
+
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+    fetch('?handler=MarcarCorreoEnviado', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token || ''
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(`Correo marcado como enviado para RUT: ${rut}`);
+        } else {
+            console.error(`Error al marcar correo para RUT ${rut}:`, data.error);
+        }
+    })
+    .catch(error => {
+        console.error(`Error de red al marcar correo para RUT ${rut}:`, error);
+    });
+}
+// Función para marcar correos como enviados
+function marcarCorreosComoEnviados(ruts, tipoCorreo) {
+    const data = {
+        ruts: ruts,
+        tipoCorreo: tipoCorreo
+    };
+
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+    fetch('?handler=MarcarCorreoEnviado', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token || ''
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Correos marcados como enviados correctamente');
+        } else {
+            console.error('Error al marcar correos:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error de red al marcar correos:', error);
+    });
+}
+
+
+
+    // Hacer las funciones disponibles globalmente
+    window.mostrarDebugMapeo = mostrarDebugMapeo;
+    window.validarFormularioEdicion = validarFormularioEdicion;
+</script>
+</body>

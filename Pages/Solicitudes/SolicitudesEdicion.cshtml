@@ -1,0 +1,1040 @@
+@page
+@model SolicitudesEdicionModel
+@{
+    ViewData["Title"] = "Solicitudes de Edición";
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/Solicitudes.css" />
+<link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo">
+                    @((User.Identity?.Name != null && User.Identity.Name.Length > 0)
+                                        ? User.Identity.Name.Substring(0, 1).ToUpper()
+                                        : "")
+                </div>
+                <div class="logo-text">
+                    <div class="logo-title">Esval/ADV</div>
+                    <div class="logo-subtitle">
+                        Recursos Humanos
+                        <br>
+                        <span style="font-size: 0.85em; color: var(--secondary-blue); font-weight: 500;">
+                            @User.Identity?.Name
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn">
+                <i class='bx bx-chevron-left' id="toggleIcon"></i>
+            </button>
+        </div>
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/index" class="nav-link">
+                        <i class='bx bx-home-alt nav-icon'></i>
+                        <span class="nav-text">Inicio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PreInducciones/index_PRE" class="nav-link active">
+                        <i class='bx bx-book-open nav-icon'></i>
+                        <span class="nav-text">Inducciones</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PostInducciones/index_POST" class="nav-link">
+                        <i class='bx bx-user-check nav-icon'></i>
+                        <span class="nav-text">Post Inducciones</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="mode-toggle">
+                <div class="mode-info">
+                    <i class='bx bx-moon nav-icon' id="modeIcon"></i>
+                    <span class="nav-text" id="modeText">Modo Oscuro</span>
+                </div>
+                <div class="toggle-switch" id="darkModeToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            @if (Model.EsAdmin)
+            {
+                <a href="/PreInducciones/Utilidades_PRE/Configuracion_PRE" class="config-link">
+                    <i class='bx bx-cog nav-icon'></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+            }
+            <a href="/Login/logout" class="logout-link">
+                <i class='bx bx-log-out nav-icon'></i>
+                <span class="nav-text">Salir</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" style="display:none;">
+        <i class='bx bx-menu' id="menuIcon"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="content-wrapper">
+            <!-- Header -->
+            <header class="page-header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class='bx bx-bell'></i>
+                    </div>
+                    <div class="header-text">
+                        <h1 class="page-title">Centro de Notificaciones</h1>
+                        <p class="page-subtitle">Gestiona y revisa todas las solicitudes de cambios del sistema</p>
+                    </div>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">@Model.SolicitudesPendientes.Count</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">@Model.SolicitudesProcesadas.Count</div>
+                        <div class="stat-label">Procesadas</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Success Message -->
+            @if (TempData["MensajeExito"] != null)
+            {
+                <div class="notification-success">
+                    <div class="notification-icon">
+                        <i class='bx bx-check-circle'></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">¡Operación Exitosa!</div>
+                        <div class="notification-message">@TempData["MensajeExito"]</div>
+                    </div>
+                    <button class="notification-close" onclick="this.parentElement.style.display='none'">
+                        <i class='bx bx-x'></i>
+                    </button>
+                </div>
+            }
+
+            <!-- Notifications Container -->
+            <div class="notifications-container">
+                <!-- Tabs Navigation -->
+                <div class="tabs-navigation">
+                    <button class="tab-button active" data-tab="pendientes">
+                        <div class="tab-icon">
+                            <i class='bx bx-time-five'></i>
+                        </div>
+                        <div class="tab-content">
+                            <span class="tab-title">Solicitudes Pendientes</span>
+                            <span class="tab-badge">@Model.SolicitudesPendientes.Count</span>
+                        </div>
+                    </button>
+                    <button class="tab-button" data-tab="historial">
+                        <div class="tab-icon">
+                            <i class='bx bx-history'></i>
+                        </div>
+                        <div class="tab-content">
+                            <span class="tab-title">Historial</span>
+                            <span class="tab-badge secondary">@Model.SolicitudesProcesadas.Count</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content-container">
+                    <!-- Solicitudes Pendientes -->
+                    <div class="tab-pane active" id="pendientes">
+                        @if (Model.SolicitudesPendientes.Count == 0)
+                        {
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class='bx bx-check-double'></i>
+                                </div>
+                                <h3 class="empty-title">¡Todo al día!</h3>
+                                <p class="empty-message">No hay solicitudes pendientes de revisión en este momento.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="requests-grid">
+                                @foreach (var sol in Model.SolicitudesPendientes)
+                                {
+                                    <div class="request-card pending">
+                                        <div class="request-header">
+                                            <div class="request-id">
+                                                <span class="id-label">ID</span>
+                                                <span class="id-number">#@sol.Id</span>
+                                            </div>
+                                            <div class="request-type">
+                                                @if(sol.Tipo == "Edicion")
+                                                {
+                                                    <span class="type-badge edit">
+                                                        <i class='bx bx-edit'></i>
+                                                        Edición
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="type-badge delete">
+                                                        <i class='bx bx-trash'></i>
+                                                        Eliminación
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="request-info">
+                                            <div class="info-row">
+                                                <div class="info-item">
+                                                    <i class='bx bx-id-card'></i>
+                                                    <span class="info-label">RUT Empleado:</span>
+                                                    <span class="info-value">@sol.RutEmpleado</span>
+                                                </div>
+                                            </div>
+                                            <div class="info-row">
+                                                <div class="info-item">
+                                                    <i class='bx bx-user'></i>
+                                                    <span class="info-label">Solicitante:</span>
+                                                    <span class="info-value">@sol.UsuarioSolicitante</span>
+                                                </div>
+                                            </div>
+                                            <div class="info-row">
+                                                <div class="info-item">
+                                                    <i class='bx bx-calendar'></i>
+                                                    <span class="info-label">Fecha:</span>
+                                                    <span class="info-value">@sol.FechaSolicitud.ToString("dd-MM-yyyy HH:mm")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="request-actions">
+                                            <button class="action-btn view-btn" onclick="verDetalles(@sol.Id)">
+                                                <i class='bx bx-search'></i>
+                                                Ver Detalles
+                                            </button>
+                                            <div class="action-buttons">
+                                                <form method="post" class="action-form">
+                                                    <input type="hidden" name="id" value="@sol.Id" />
+                                                    <button type="submit" asp-page-handler="Aprobar" class="action-btn approve-btn">
+                                                        <i class='bx bx-check'></i>
+                                                        Aprobar
+                                                    </button>
+                                                    <button type="submit" asp-page-handler="Rechazar" class="action-btn reject-btn">
+                                                        <i class='bx bx-x'></i>
+                                                        Rechazar
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Historial -->
+                    <div class="tab-pane" id="historial">
+                        @if (Model.SolicitudesProcesadas.Count == 0)
+                        {
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class='bx bx-history'></i>
+                                </div>
+                                <h3 class="empty-title">Sin historial</h3>
+                                <p class="empty-message">No hay solicitudes procesadas en el historial.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="requests-grid">
+                                @foreach (var sol in Model.SolicitudesProcesadas)
+                                {
+                                    <div class="request-card @(sol.Aprobada == true ? "approved" : "rejected")">
+                                        <div class="request-header">
+                                            <div class="request-id">
+                                                <span class="id-label">ID</span>
+                                                <span class="id-number">#@sol.Id</span>
+                                            </div>
+                                            <div class="request-status">
+                                                @if(sol.Aprobada == true)
+                                                {
+                                                    <span class="status-badge approved">
+                                                        <i class='bx bx-check-circle'></i>
+                                                        Aprobada
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="status-badge rejected">
+                                                        <i class='bx bx-x-circle'></i>
+                                                        Rechazada
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="request-info">
+                                            <div class="info-row">
+                                                <div class="info-item">
+                                                    <i class='bx bx-id-card'></i>
+                                                    <span class="info-label">RUT:</span>
+                                                    <span class="info-value">@sol.RutEmpleado</span>
+                                                </div>
+                                                <div class="info-item">
+                                                    @if(sol.Tipo == "Edicion")
+                                                    {
+                                                        <span class="type-badge-small edit">
+                                                            <i class='bx bx-edit'></i>
+                                                            Edición
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="type-badge-small delete">
+                                                            <i class='bx bx-trash'></i>
+                                                            Eliminación
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <div class="info-row">
+                                                <div class="info-item">
+                                                    <i class='bx bx-user'></i>
+                                                    <span class="info-label">Solicitante:</span>
+                                                    <span class="info-value">@sol.UsuarioSolicitante</span>
+                                                </div>
+                                            </div>
+                                            <div class="info-row">
+                                                <div class="info-item">
+                                                    <i class='bx bx-calendar'></i>
+                                                    <span class="info-label">Fecha:</span>
+                                                    <span class="info-value">@sol.FechaSolicitud.ToString("dd-MM-yyyy HH:mm")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="request-actions">
+                                            <button class="action-btn view-btn" onclick="verDetalles(@sol.Id)">
+                                                <i class='bx bx-search'></i>
+                                                Ver Detalles
+                                            </button>
+                                        @if (sol.Aprobada == true)
+                                            {
+                                                @if (sol.Tipo == "Eliminacion")
+                                                {
+                                                    <!-- BOTÓN DESHABILITADO PARA ELIMINACIONES -->
+                                                    <button class="action-btn revert-btn disabled" 
+                                                            title="Las eliminaciones no se pueden revertir"
+                                                            disabled>
+                                                        <i class='bx bx-block'></i>
+                                                        No se puede revertir
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <!-- BOTÓN NORMAL PARA EDICIONES -->
+                                                    <button class="action-btn revert-btn" onclick="confirmarReversion(@sol.Id)">
+                                                        <i class='bx bx-undo'></i>
+                                                        Revertir
+                                                    </button>
+                                                }
+                                            }
+                                            else if (sol.Aprobada == false)
+                                            {
+                                                <span class="status-badge rejected">Rechazada</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para Ver Detalles -->
+    <div class="modal-overlay" id="detallesModalOverlay" style="display: none;">
+        <div class="modal-container details-modal">
+            <div class="modal-header">
+                <div class="modal-header-content">
+                    <div class="modal-icon">
+                        <i class='bx bx-detail'></i>
+                    </div>
+                    <div class="modal-title-section">
+                        <h2 class="modal-title">Detalles de la Solicitud</h2>
+                        <p class="modal-subtitle">Comparación de datos actuales vs solicitados</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close-btn" onclick="cerrarModalDetalles()">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="detallesCargando" class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Cargando detalles de la solicitud...</p>
+                </div>
+                
+                <div id="detallesContenido" class="details-content" style="display:none">
+                    <div class="comparison-container">
+                        <div class="comparison-section">
+                            <div class="section-header current">
+                                <i class='bx bx-data'></i>
+                                <h3>Datos Actuales</h3>
+                            </div>
+                            <div id="datosActuales" class="data-table-container">
+                                <!-- Los datos actuales se cargarán aquí -->
+                            </div>
+                        </div>
+                        
+                        <div class="comparison-divider">
+                            <div class="divider-line"></div>
+                            <div class="divider-icon">
+                                <i class='bx bx-right-arrow-alt'></i>
+                            </div>
+                        </div>
+                        
+                        <div class="comparison-section">
+                            <div class="section-header requested">
+                                <i class='bx bx-edit-alt'></i>
+                                <h3>Datos Solicitados</h3>
+                            </div>
+                            <div id="datosSolicitados" class="data-table-container">
+                                <!-- Los datos solicitados se cargarán aquí -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="detallesError" class="error-state" style="display:none">
+                    <div class="error-icon">
+                        <i class='bx bx-error-circle'></i>
+                    </div>
+                    <h3>Error al cargar</h3>
+                    <p>No se pudieron cargar los detalles. Intenta nuevamente.</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn-modern btn-secondary" onclick="cerrarModalDetalles()">
+                    <i class='bx bx-x'></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación para Revertir -->
+    <div class="modal-overlay" id="reversionModalOverlay" style="display: none;">
+        <div class="modal-container revert-modal">
+            <div class="modal-header warning">
+                <div class="modal-icon-warning">
+                    <i class='bx bx-error-circle'></i>
+                </div>
+                <button type="button" class="modal-close-btn" onclick="cerrarModalReversion()">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+            
+            <div class="modal-body text-center">
+                <h2 class="warning-title">¿Confirmar Reversión?</h2>
+                <p class="warning-message">
+                    Esta acción restaurará los datos originales del empleado antes de que se aprobara la solicitud.
+                </p>
+                <div class="warning-note">
+                    <i class='bx bx-info-circle'></i>
+                    <span>Esta operación no se puede deshacer</span>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <form method="post">
+                    <input type="hidden" id="idReversionInput" name="id" value="" />
+                    <button type="button" class="btn-modern btn-secondary" onclick="cerrarModalReversion()">
+                        <i class='bx bx-x'></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" asp-page-handler="Revertir" class="btn-modern btn-warning">
+                        <i class='bx bx-revision'></i>
+                        Confirmar Reversión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar functionality
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const menuIcon = document.getElementById('menuIcon');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const modeIcon = document.getElementById('modeIcon');
+        const modeText = document.getElementById('modeText');
+        const body = document.body;
+
+        let sidebarOpen = false;
+        let sidebarCollapsed = false;
+        let darkMode = false;
+
+        function toggleSidebarCollapse() {
+            sidebarCollapsed = !sidebarCollapsed;
+            
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+            }
+            
+            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+        }
+
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            
+            if (sidebarOpen) {
+                sidebar.classList.add('open');
+                mobileOverlay.classList.add('active');
+                menuIcon.className = 'bx bx-x';
+            } else {
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+            }
+        }
+
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            
+            if (darkMode) {
+                body.classList.add('dark');
+                modeIcon.className = 'bx bx-sun nav-icon';
+                modeText.textContent = 'Modo Claro';
+            } else {
+                body.classList.remove('dark');
+                modeIcon.className = 'bx bx-moon nav-icon';
+                modeText.textContent = 'Modo Oscuro';
+            }
+            
+            localStorage.setItem('darkMode', darkMode);
+        }
+
+        // Event listeners
+        sidebarToggleBtn.addEventListener('click', toggleSidebarCollapse);
+        mobileMenuBtn.addEventListener('click', toggleSidebar);
+        mobileOverlay.addEventListener('click', toggleSidebar);
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        document.querySelector('.logo').addEventListener('dblclick', toggleSidebarCollapse);
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+                sidebarOpen = false;
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+                sidebarCollapsed = false;
+                toggleIcon.className = 'bx bx-chevron-left';
+            }
+        });
+
+        window.addEventListener('load', function() {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (savedDarkMode) {
+                toggleDarkMode();
+            }
+            
+            if (window.innerWidth >= 1024) {
+                const savedSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedSidebarCollapsed) {
+                    toggleSidebarCollapse();
+                }
+            }
+        });
+
+        // Tabs functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all buttons and panes
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanes.forEach(pane => pane.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding pane
+                    this.classList.add('active');
+                    document.getElementById(targetTab).classList.add('active');
+                });
+            });
+        });
+
+         // FUNCIÓN MEJORADA PARA VER DETALLES - CON SOPORTE PARA ELIMINACIONES
+function verDetalles(id) {
+    const detallesModalOverlay = document.getElementById('detallesModalOverlay');
+    const detallesCargando = document.getElementById('detallesCargando');
+    const detallesContenido = document.getElementById('detallesContenido');
+    const detallesError = document.getElementById('detallesError');
+    
+    // VERIFICAR QUE TODOS LOS ELEMENTOS EXISTAN
+    if (!detallesModalOverlay || !detallesCargando || !detallesContenido || !detallesError) {
+        console.error('Error: No se encontraron los elementos del modal de detalles');
+        alert('Error: No se pudo abrir el modal de detalles');
+        return;
+    }
+    
+    detallesCargando.style.display = 'block';
+    detallesContenido.style.display = 'none';
+    detallesError.style.display = 'none';
+    
+    // Mostrar el modal
+    detallesModalOverlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Cargar los detalles
+    fetch(`?handler=DetallesSolicitud&id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                const errorP = detallesError.querySelector('p');
+                if (errorP) {
+                    errorP.textContent = data.error;
+                } else {
+                    detallesError.innerHTML = `<div class="error-icon"><i class='bx bx-error-circle'></i></div><h3>Error al cargar</h3><p>${data.error}</p>`;
+                }
+                detallesError.style.display = 'block';
+                detallesCargando.style.display = 'none';
+                return;
+            }
+            
+            // VERIFICAR SI ES UNA SOLICITUD DE ELIMINACIÓN
+            if (data.solicitud && data.solicitud.tipo === 'Eliminacion') {
+                mostrarDetallesEliminacion(data);
+            } else {
+                mostrarDetallesEdicion(data);
+            }
+            
+            detallesCargando.style.display = 'none';
+            detallesContenido.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const errorP = detallesError.querySelector('p');
+            if (errorP) {
+                errorP.textContent = 'Error al cargar los detalles: ' + error.message;
+            } else {
+                detallesError.innerHTML = `<div class="error-icon"><i class='bx bx-error-circle'></i></div><h3>Error al cargar</h3><p>Error al cargar los detalles: ${error.message}</p>`;
+            }
+            detallesError.style.display = 'block';
+            detallesCargando.style.display = 'none';
+        });
+}
+
+    // FUNCIÓN PARA MOSTRAR DETALLES DE ELIMINACIÓN
+function mostrarDetallesEliminacion(data) {
+    const detallesContenido = document.getElementById('detallesContenido');
+    
+    if (!detallesContenido) {
+        console.error('Error: No se encontró el elemento detallesContenido');
+        return;
+    }
+    
+    // Crear contenido específico para eliminaciones
+    const solicitud = data.solicitud;
+    const empleadoData = data.datosActuales || {};
+    
+    const statusClass = solicitud.procesada ? (solicitud.aprobada ? 'approved' : 'rejected') : 'pending';
+    const statusText = solicitud.procesada ? (solicitud.aprobada ? 'Aprobada' : 'Rechazada') : 'Pendiente';
+    const statusIcon = solicitud.procesada ? (solicitud.aprobada ? 'bx-check-circle' : 'bx-x-circle') : 'bx-time-five';
+    
+    detallesContenido.innerHTML = `
+        <div class="elimination-details">
+            <!-- Header de Eliminación -->
+            <div class="elimination-header">
+                <div class="elimination-icon">
+                    <i class='bx bx-trash-alt'></i>
+                </div>
+                <div class="elimination-info">
+                    <h3>Solicitud de Eliminación</h3>
+                    <div class="status-info">
+                        <span class="status-badge ${statusClass}">
+                            <i class='bx ${statusIcon}'></i>
+                            ${statusText}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del Empleado -->
+            <div class="employee-card elimination">
+                <div class="card-header">
+                    <h4><i class='bx bx-user'></i> Información del Empleado</h4>
+                </div>
+                <div class="employee-data">
+                    <div class="data-grid">
+                        <div class="data-item">
+                            <span class="label">RUT:</span>
+                            <span class="value">${empleadoData.rut || solicitud.rutEmpleado || 'N/A'}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="label">Nombre:</span>
+                            <span class="value">${(empleadoData.nombre || '') + ' ' + (empleadoData.apellido_Paterno || '') + ' ' + (empleadoData.apellido_Materno || '')}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="label">Cargo:</span>
+                            <span class="value">${empleadoData.cargo || 'N/A'}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="label">Gerencia:</span>
+                            <span class="value">${empleadoData.gerencia || 'N/A'}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="label">Correo:</span>
+                            <span class="value">${empleadoData.correo || 'N/A'}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="label">Teléfono:</span>
+                            <span class="value">${empleadoData.telefono || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de la Solicitud -->
+            <div class="request-metadata">
+                <div class="metadata-grid">
+                    <div class="metadata-item">
+                        <span class="meta-label">Solicitado por:</span>
+                        <span class="meta-value">${solicitud.usuarioSolicitante || 'N/A'}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="meta-label">Fecha de solicitud:</span>
+                        <span class="meta-value">${solicitud.fechaSolicitud ? new Date(solicitud.fechaSolicitud).toLocaleString('es-ES') : 'N/A'}</span>
+                    </div>
+                    ${solicitud.procesada ? `
+                    <div class="metadata-item">
+                        <span class="meta-label">Procesado por:</span>
+                        <span class="meta-value">${solicitud.usuarioProceso || 'N/A'}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="meta-label">Fecha de procesamiento:</span>
+                        <span class="meta-value">${solicitud.fechaProcesamiento ? new Date(solicitud.fechaProcesamiento).toLocaleString('es-ES') : 'N/A'}</span>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+
+            <!-- Advertencia sobre Reversión -->
+            ${solicitud.procesada && solicitud.aprobada ? `
+            <div class="warning-section">
+                <div class="warning-card">
+                    <div class="warning-icon">
+                        <i class='bx bx-error-circle'></i>
+                    </div>
+                    <div class="warning-content">
+                        <h4>Eliminación Permanente</h4>
+                        <p>Esta solicitud de eliminación fue aprobada y el empleado ha sido eliminado permanentemente del sistema.</p>
+                        <p><strong>Esta acción no se puede revertir.</strong></p>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// FUNCIÓN PARA MOSTRAR DETALLES DE EDICIÓN (MEJORADA CON VERIFICACIONES)
+function mostrarDetallesEdicion(data) {
+    const datosActualesElement = document.getElementById('datosActuales');
+    const datosSolicitadosElement = document.getElementById('datosSolicitados');
+    
+    if (!datosActualesElement || !datosSolicitadosElement) {
+        console.error('Error: No se encontraron los elementos datosActuales o datosSolicitados');
+        
+        // Crear estructura completa si no existe
+        const detallesContenido = document.getElementById('detallesContenido');
+        if (detallesContenido) {
+            detallesContenido.innerHTML = `
+                <div class="comparison-container">
+                    <div class="comparison-section">
+                        <div class="section-header current">
+                            <i class='bx bx-data'></i>
+                            <h3>Datos Actuales</h3>
+                        </div>
+                        <div id="datosActuales" class="data-table-container">
+                            ${generarTablaComparacion(data.datosActuales)}
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-divider">
+                        <div class="divider-line"></div>
+                        <div class="divider-icon">
+                            <i class='bx bx-right-arrow-alt'></i>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-section">
+                        <div class="section-header requested">
+                            <i class='bx bx-edit-alt'></i>
+                            <h3>Datos Solicitados</h3>
+                        </div>
+                        <div id="datosSolicitados" class="data-table-container">
+                            ${generarTablaComparacion(data.datosSolicitados, data.datosActuales)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        // Generar tablas HTML para los datos actuales y solicitados
+        const actualesHtml = generarTablaComparacion(data.datosActuales);
+        const solicitadosHtml = generarTablaComparacion(data.datosSolicitados, data.datosActuales);
+        
+        datosActualesElement.innerHTML = actualesHtml;
+        datosSolicitadosElement.innerHTML = solicitadosHtml;
+    }
+}
+
+    // Función para cerrar modal de detalles
+    function cerrarModalDetalles() {
+        document.getElementById('detallesModalOverlay').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+       // FUNCIÓN MEJORADA PARA GENERAR TABLA DE COMPARACIÓN
+function generarTablaComparacion(datos, datosComparacion = null) {
+    if (!datos || typeof datos !== 'object') {
+        return '<div class="no-data">No hay datos disponibles</div>';
+    }
+    
+    let html = '<table class="comparison-table">';
+    html += '<thead><tr><th>Campo</th><th>Valor</th></tr></thead><tbody>';
+    
+    for (const [key, value] of Object.entries(datos)) {
+        if (key === 'rUT') continue; // Saltamos el RUT duplicado
+        
+        let claseCampo = '';
+        if (datosComparacion && datosComparacion[key] !== value) {
+            claseCampo = 'changed-field';
+        }
+        
+        const nombreCampo = formatearNombreCampo(key);
+        const valorFormateado = formatearValor(key, value);
+        
+        html += `<tr><td class="field-name">${nombreCampo}</td><td class="field-value ${claseCampo}">${valorFormateado}</td></tr>`;
+    }
+    
+    html += '</tbody></table>';
+    return html;
+}
+// FUNCIÓN PARA FORMATEAR NOMBRE DE CAMPO
+function formatearNombreCampo(key) {
+    // Convertir camelCase a palabras separadas
+    return key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, str => str.toUpperCase())
+        .replace(/_/g, ' '); // También reemplazar guiones bajos
+}
+
+// FUNCIÓN PARA FORMATEAR VALOR SEGÚN EL TIPO DE CAMPO
+function formatearValor(key, value) {
+    if (value === null || value === undefined || value === '') return '-';
+    
+    // Formateo de fechas
+    if (key.toLowerCase().includes('fecha') && value) {
+        try {
+            const fecha = new Date(value);
+            if (!isNaN(fecha)) {
+                return fecha.toLocaleDateString('es-ES');
+            }
+        } catch (e) {
+            console.warn('Error al formatear fecha:', value);
+        }
+    }
+    
+    return value.toString();
+}
+
+// FUNCIÓN PARA CERRAR MODAL DE DETALLES
+function cerrarModalDetalles() {
+    const modal = document.getElementById('detallesModalOverlay');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+
+// FUNCIÓN MEJORADA PARA CONFIRMAR REVERSIÓN
+function confirmarReversion(id) {
+    // Primero verificar el tipo de solicitud
+    fetch(`?handler=DetallesSolicitud&id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error al cargar los detalles: ' + data.error);
+                return;
+            }
+
+            // VERIFICAR SI ES ELIMINACIÓN
+            if (data.solicitud && data.solicitud.tipo === 'Eliminacion') {
+                // Mostrar mensaje de error específico
+                mostrarNotificacionError('Las solicitudes de eliminación no se pueden revertir.');
+                return;
+            }
+
+            // Si es edición, proceder normalmente
+            const idInput = document.getElementById('idReversionInput');
+            const modal = document.getElementById('reversionModalOverlay');
+            
+            if (idInput && modal) {
+                idInput.value = id;
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                console.error('Error: No se encontraron elementos del modal de reversión');
+                alert('Error: No se pudo abrir el modal de reversión');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarNotificacionError('Error al verificar el tipo de solicitud.');
+        });
+}
+
+    // FUNCIÓN PARA MOSTRAR NOTIFICACIONES DE ERROR
+function mostrarNotificacionError(mensaje) {
+    // Crear notificación temporal
+    const notificacion = document.createElement('div');
+    notificacion.className = 'notification-error temp-notification';
+    notificacion.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        max-width: 400px;
+        background: rgba(239, 68, 68, 0.95);
+        color: white;
+        border: 1px solid #ef4444;
+        border-radius: 8px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.3s ease;
+    `;
+    
+    notificacion.innerHTML = `
+        <div class="notification-icon">
+            <i class='bx bx-error-circle'></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">Error</div>
+            <div class="notification-message">${mensaje}</div>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; margin-left: auto;">
+            <i class='bx bx-x'></i>
+        </button>
+    `;
+
+    // Agregar al body
+    document.body.appendChild(notificacion);
+
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        if (notificacion.parentElement) {
+            notificacion.remove();
+        }
+    }, 5000);
+
+    // Animar entrada
+    setTimeout(() => {
+        notificacion.style.transform = 'translateX(0)';
+        notificacion.style.opacity = '1';
+    }, 100);
+}
+
+// FUNCIÓN PARA CERRAR MODAL DE REVERSIÓN
+function cerrarModalReversion() {
+    const modal = document.getElementById('reversionModalOverlay');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Función para cerrar modal de reversión
+function cerrarModalReversion() {
+    document.getElementById('reversionModalOverlay').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+        // Cerrar modales con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarModalDetalles();
+                cerrarModalReversion();
+            }
+        });
+
+        // Cerrar modales al hacer clic en el overlay
+        document.getElementById('detallesModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModalDetalles();
+            }
+        });
+
+        document.getElementById('reversionModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModalReversion();
+            }
+        });
+
+        // INICIALIZAR TOOLTIPS PARA BOTONES DESHABILITADOS
+    document.addEventListener('DOMContentLoaded', function() {
+        // Agregar funcionalidad de tooltip para botones deshabilitados
+        const botonesDeshabilitados = document.querySelectorAll('.action-btn.disabled[title]');
+        
+        botonesDeshabilitados.forEach(boton => {
+            boton.addEventListener('mouseenter', function() {
+                this.setAttribute('data-tooltip-visible', 'true');
+            });
+            
+            boton.addEventListener('mouseleave', function() {
+                this.removeAttribute('data-tooltip-visible');
+            });
+        });
+    });
+    </script>
+</body>

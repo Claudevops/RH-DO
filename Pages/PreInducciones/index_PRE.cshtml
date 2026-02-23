@@ -1,0 +1,798 @@
+@page
+@model index_pre
+@{
+    Layout = null;
+    ViewData["Title"] = "Gestion de Personal";
+}
+
+<link rel="stylesheet" href="~/css/index_PRE.css">
+<link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo">
+                    @((User.Identity?.Name != null && User.Identity.Name.Length > 0) 
+                        ? User.Identity.Name.Substring(0, 1).ToUpper() 
+                        : "")
+                </div>
+                <div class="logo-text">
+                    <div class="logo-title">Esval/ADV</div>
+                    <div class="logo-subtitle">
+                        Recursos Humanos
+                        <br>
+                        <span style="font-size: 0.85em; color: var(--secondary-blue); font-weight: 500;">
+                            @User.Identity?.Name
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn">
+                <i class='bx bx-chevron-left' id="toggleIcon"></i>
+            </button>
+        </div>
+
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/index" class="nav-link">
+                        <i class='bx bx-home-alt nav-icon'></i>
+                        <span class="nav-text">Inicio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PreInducciones/index_PRE" class="nav-link active">
+                        <i class='bx bx-book-open nav-icon'></i>
+                        <span class="nav-text">Inducciones</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PostInducciones/index_POST" class="nav-link">
+                        <i class='bx bx-user-check nav-icon'></i>
+                        <span class="nav-text">Post Inducciones</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="mode-toggle">
+                <div class="mode-info">
+                    <i class='bx bx-moon nav-icon' id="modeIcon"></i>
+                    <span class="nav-text" id="modeText">Modo Oscuro</span>
+                </div>
+                <div class="toggle-switch" id="darkModeToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            
+            @if (Model.EsAdmin)
+            {
+                <a href="/PreInducciones/Utilidades_PRE/Configuracion_PRE" class="config-link">
+                    <i class='bx bx-cog nav-icon'></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+                
+                <div class="notifications-indicator @(Model.SolicitudesPendientes > 0 ? "has-notifications" : "")">
+                    <i class='bx bx-notification nav-icon'></i>
+                    <span class="nav-text">Notificaciones</span>
+                    @if (Model.SolicitudesPendientes > 0)
+                    {
+                        <span class="notification-badge">@Model.SolicitudesPendientes</span>
+                    }
+                    <span class="tooltip">
+                        @if (Model.SolicitudesPendientes > 0)
+                        {
+                            <text>@Model.SolicitudesPendientes notificación@(Model.SolicitudesPendientes == 1 ? "" : "es") pendiente@(Model.SolicitudesPendientes == 1 ? "" : "s")</text>
+                        }
+                        else
+                        {
+                            <text>Sin notificaciones</text>
+                        }
+                    </span>
+                </div>
+            }
+            
+            <a href="/Login/logout" class="logout-link">
+                <i class='bx bx-log-out nav-icon'></i>
+                <span class="nav-text">Salir</span>
+            </a>
+        </div>
+    </aside>
+
+
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class='bx bx-menu' id="menuIcon"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+<!-- Main Content -->
+<main class="main-content" id="mainContent">
+    <!-- FORMULARIO CON TOKEN CSRF -->
+    <form method="post" style="display: none;" id="csrf-form">
+        @Html.AntiForgeryToken()
+    </form>
+    
+    <div class="content-wrapper">
+        <!-- Header -->
+        <header class="page-header">
+            <h1 class="page-title">
+                <span class="header-icon">💧</span>
+                Bienvenido al Panel de Inducciones
+            </h1>
+        </header>
+
+        <!-- Options Section-->
+        <section class="options-section">
+            <h2 class="section-title">Opciones disponibles</h2>
+            
+            <div class="options-grid">
+                <a href="/PreInducciones/Utilidades_PRE/Plani" class="option-card"> 
+                    <div class="option-icon">📋</div>
+                    <div class="option-title">Formulario Ingreso Nuevos Trabajadores</div>
+                    <div class="option-description">Gestiona y planifica la incorporación de nuevos Trabajadores</div>
+                </a>
+
+                <a href="/PreInducciones/DatosyCorreos/DatosyCorreos" class="option-card">
+                    <div class="option-icon">📊</div>
+                    <div class="option-title">Datos Trabajadores</div>
+                    <div class="option-description">Visualiza información de los Trabajadores</div>
+                </a>
+                
+                <a href="/index" class="option-card">
+                    <div class="option-icon">🏠</div>
+                    <div class="option-title">Volver al inicio</div>
+                    <div class="option-description">Regresa a la página principal del sistema</div>
+                </a>
+            </div>
+        </section>
+
+        @if (Model.EsAdmin)
+        {
+        <!-- SECCIÓN DE CARGA COMPLETA -->
+        <section class="upload-section">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <h2 class="section-title" style="margin-bottom: 0;">Manejo de Data</h2>
+                <button class="boton-estilizado" type="button" id="mostrar-carga-btn">
+                    <i class='bx bxs-file-import'></i> ¿Desea Importar o Exportar la Data?
+                </button>
+            </div>
+            
+            <!-- ÁREA DE CARGA CON FORMULARIO COMPLETO -->
+            <div id="excel-drop-area" style="display: none;">
+                <div class="upload-container">
+                    <span class="upload-icon">📄</span>
+                    <p class="upload-text">Arrastra y suelta tu archivo Excel aquí</p>
+                    <p class="upload-hint">o utiliza el botón para seleccionarlo (solo archivos .xlsx o .xlsm)</p>
+                    
+                    <!-- FORMULARIO COMPLETO PARA UPLOAD -->
+                    <form id="excel-upload-form" enctype="multipart/form-data" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="file" id="excel-input" name="ExcelFile" accept=".xlsx,.xlsm" style="display:none;" />
+                    </form>
+                    
+                    <div class="upload-buttons">
+                    <button class="boton-estilizado" type="button" id="excel-upload-btn">
+                        <i class='bx bx-folder'></i>
+                        Seleccionar archivo
+                    </button>
+                    
+                    <button class="boton-estilizado boton-exportar" type="button" id="excel-export-btn">
+                        <i class='bx bx-download'></i>
+                        Exportar datos actuales
+                    </button>
+                    
+                    <!-- Eliminar base de datos -->
+                    <button class="boton-estilizado boton-eliminar" type="button" id="delete-database-btn">
+                        <i class='bx bx-trash'></i>
+                        Eliminar base de datos
+                    </button>
+                </div>
+
+                <!--MODAL PARA CONFIRMACIÓN DE ELIMINACIÓN -->
+                <div id="delete-confirmation-modal" class="modal-overlay" style="display: none;">
+                    <div class="modal-container">
+                        <div class="modal-header">
+                            <h3 class="modal-title">
+                                <i class='bx bx-error-circle' style="color: #ef4444;"></i>
+                                Confirmar Eliminación de Base de Datos
+                            </h3>
+                            <button class="modal-close" id="close-delete-modal">
+                                <i class='bx bx-x'></i>
+                            </button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <div class="warning-message">
+                                <p><strong>⚠️ ADVERTENCIA:</strong></p>
+                                <p>Esta acción eliminará <strong>TODOS</strong> los datos de empleados de la base de datos.</p>
+                                <p><strong>Esta acción NO se puede deshacer.</strong></p>
+                            </div>
+                            
+                            <div class="password-input-container">
+                                <label for="delete-password">Ingresa tu contraseña para confirmar:</label>
+                                <div class="password-field">
+                                    <input type="password" id="delete-password" placeholder="Contraseña" class="modal-input">
+                                    <button type="button" id="toggle-delete-password" class="toggle-password">
+                                        <i class='bx bx-hide'></i>
+                                    </button>
+                                </div>
+                                <div id="password-error" class="error-text" style="display: none;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button class="modal-btn modal-btn-cancel" id="cancel-delete-btn">
+                                <i class='bx bx-x'></i>
+                                Cancelar
+                            </button>
+                            <button class="modal-btn modal-btn-danger" id="confirm-delete-btn">
+                                <i class='bx bx-trash'></i>
+                                Eliminar Todo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <!-- ÁREA DE MENSAJES MEJORADA -->
+                    <div id="excel-upload-msg" class="upload-messages"></div>
+                    
+                    <!-- BARRA DE PROGRESO -->
+                    <div id="upload-progress" class="progress-container" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <span class="progress-text" id="progress-text">0%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        }
+    </div>
+</main>
+
+
+<script>
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const toggleIcon = document.getElementById('toggleIcon');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const menuIcon = document.getElementById('menuIcon');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const modeIcon = document.getElementById('modeIcon');
+    const modeText = document.getElementById('modeText');
+    const body = document.body;
+
+    // VARIABLES PARA EXCEL UPLOAD
+    const mostrarCargaBtn = document.getElementById('mostrar-carga-btn');
+    const excelDropArea = document.getElementById('excel-drop-area');
+    const excelInput = document.getElementById('excel-input');
+    const excelUploadBtn = document.getElementById('excel-upload-btn');
+    const excelExportBtn = document.getElementById('excel-export-btn');
+    const excelUploadMsg = document.getElementById('excel-upload-msg');
+    const uploadProgress = document.getElementById('upload-progress');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const excelUploadForm = document.getElementById('excel-upload-form');
+
+    // VARIABLES PARA MODAL DE ELIMINACIÓN
+    const deleteDatabaseBtn = document.getElementById('delete-database-btn');
+    const deleteConfirmationModal = document.getElementById('delete-confirmation-modal');
+    const closeDeleteModal = document.getElementById('close-delete-modal');
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    const deletePasswordInput = document.getElementById('delete-password');
+    const toggleDeletePassword = document.getElementById('toggle-delete-password');
+    const passwordError = document.getElementById('password-error');
+
+    let sidebarOpen = false;
+    let sidebarCollapsed = false;
+    let darkMode = false;
+    let areaVisible = false;
+
+    // FUNCIONES DEL SIDEBAR
+    function toggleSidebarCollapse() {
+        sidebarCollapsed = !sidebarCollapsed;
+        
+        if (sidebarCollapsed) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('sidebar-collapsed');
+        } else {
+            sidebar.classList.remove('collapsed');
+            mainContent.classList.remove('sidebar-collapsed');
+        }
+        
+        localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+    }
+
+    function toggleSidebar() {
+        sidebarOpen = !sidebarOpen;
+        
+        if (sidebarOpen) {
+            sidebar.classList.add('open');
+            mobileOverlay.classList.add('active');
+            menuIcon.className = 'bx bx-x';
+        } else {
+            sidebar.classList.remove('open');
+            mobileOverlay.classList.remove('active');
+            menuIcon.className = 'bx bx-menu';
+        }
+    }
+
+    function toggleDarkMode() {
+        darkMode = !darkMode;
+        
+        if (darkMode) {
+            body.classList.add('dark');
+            modeIcon.className = 'bx bx-sun nav-icon';
+            modeText.textContent = 'Modo Claro';
+        } else {
+            body.classList.remove('dark');
+            modeIcon.className = 'bx bx-moon nav-icon';
+            modeText.textContent = 'Modo Oscuro';
+        }
+        
+        localStorage.setItem('darkMode', darkMode);
+    }
+
+    // FUNCIÓN PARA ALTERNAR ÁREA DE CARGA
+    function toggleExcelDropArea() {
+        areaVisible = !areaVisible;
+        
+        if (areaVisible) {
+            excelDropArea.style.display = 'block';
+            mostrarCargaBtn.innerHTML = '<i class="bx bx-x"></i> Ocultar';
+            mostrarCargaBtn.style.backgroundColor = '#ef4444';
+        } else {
+            excelDropArea.style.display = 'none';
+            mostrarCargaBtn.innerHTML = '<i class="bx bxs-file-import"></i> ¿Desea Importar o Exportar la Data?';
+            mostrarCargaBtn.style.backgroundColor = '';
+            resetUploadArea();
+        }
+    }
+
+    // FUNCIÓN PARA RESETEAR EL ÁREA DE CARGA
+    function resetUploadArea() {
+        excelUploadMsg.innerHTML = '';
+        uploadProgress.style.display = 'none';
+        progressFill.style.width = '0%';
+        progressText.textContent = '0%';
+        excelInput.value = '';
+    }
+
+    // FUNCIÓN PARA MOSTRAR PROGRESO
+    function showProgress(percent) {
+        uploadProgress.style.display = 'block';
+        progressFill.style.width = percent + '%';
+        progressText.textContent = percent + '%';
+    }
+
+    // FUNCIÓN PRINCIPAL PARA MANEJAR UPLOAD
+    function handleFileUpload(file) {
+        console.log('Iniciando upload del archivo:', file.name);
+        
+        // Resetear área de mensajes
+        excelUploadMsg.innerHTML = '<p style="color: #3b82f6;"><i class="bx bx-loader-alt bx-spin"></i> Subiendo archivo...</p>';
+        showProgress(0);
+        
+        // Crear FormData con el archivo y token
+        const formData = new FormData();
+        formData.append('ExcelFile', file);
+        
+        // Obtener token CSRF del formulario
+        const token = document.querySelector('#excel-upload-form input[name="__RequestVerificationToken"]')?.value;
+        if (token) {
+            formData.append('__RequestVerificationToken', token);
+        }
+
+        // SIMULADOR DE PROGRESO
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 30;
+            if (progress > 90) progress = 90;
+            showProgress(Math.round(progress));
+        }, 100);
+
+        // PETICIÓN AL SERVIDOR
+        fetch('/PreInducciones/index_PRE?handler=UploadExcel', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            clearInterval(progressInterval);
+            showProgress(100);
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.error('Respuesta no es JSON:', text);
+                    throw new Error('La respuesta del servidor no es JSON válido');
+                });
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log('Data received:', data);
+            
+            if (data.success) {
+                let mensaje = `<i class="bx bx-check-circle"></i> ${data.message}`;
+                
+                if (data.detalles) {
+                    mensaje += `<br><small><strong>Resumen:</strong></small>`;
+                    mensaje += `<br><small>• Nuevos empleados: ${data.detalles.nuevos || 0}</small>`;
+                    mensaje += `<br><small>• Actualizados: ${data.detalles.actualizados || 0}</small>`;
+                    
+                    if (data.detalles.errores && data.detalles.errores.length > 0) {
+                        mensaje += `<br><small style="color: #f59e0b;">• ${data.detalles.errores.length} errores encontrados</small>`;
+                        
+                        // Mostrar primeros errores
+                        if (data.detalles.errores.length > 0) {
+                            mensaje += '<br><small><strong>Primeros errores:</strong></small>';
+                            data.detalles.errores.slice(0, 3).forEach(error => {
+                                mensaje += `<br><small style="color: #ef4444;">- ${error}</small>`;
+                            });
+                        }
+                    }
+                }
+                
+                excelUploadMsg.innerHTML = `<div class="success-message">${mensaje}</div>`;
+                
+                // Auto-ocultar después de 8 segundos
+                setTimeout(() => {
+                    toggleExcelDropArea();
+                }, 8000);
+                
+            } else {
+                excelUploadMsg.innerHTML = `<div class="error-message"><i class="bx bx-error-circle"></i> Error: ${data.message || 'Error desconocido'}</div>`;
+            }
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            console.error('Error completo:', error);
+            
+            let errorMessage = 'Error al subir el archivo';
+            
+            if (error.message.includes('HTTP error')) {
+                errorMessage = `Error del servidor (${error.message})`;
+            } else if (error.message.includes('JSON')) {
+                errorMessage = 'El servidor no respondió correctamente';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            excelUploadMsg.innerHTML = `<div class="error-message"><i class="bx bx-error-circle"></i> ${errorMessage}</div>`;
+            uploadProgress.style.display = 'none';
+        });
+    }
+
+    // FUNCIÓN PARA EXPORTAR DATOS
+    function handleExportData() {
+        console.log('Iniciando exportación de empleados...');
+        excelUploadMsg.innerHTML = '<p style="color: #3b82f6;"><i class="bx bx-loader-alt bx-spin"></i> Generando archivo de exportación...</p>';
+        showProgress(0);
+        
+        // Simulador de progreso para exportación
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 25;
+            if (progress > 85) progress = 85;
+            showProgress(Math.round(progress));
+        }, 150);
+        
+        // Obtener token CSRF
+        const token = document.querySelector('#excel-upload-form input[name="__RequestVerificationToken"]')?.value;
+        
+        fetch('/PreInducciones/index_PRE?handler=ExportExcel', {
+            method: 'POST',
+            headers: {
+                'RequestVerificationToken': token || '',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            clearInterval(progressInterval);
+            showProgress(100);
+            
+            console.log('Export response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            // Verificar si es un archivo Excel o un error JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                // Es un error en JSON
+                return response.json().then(data => {
+                    throw new Error(data.message || 'Error desconocido');
+                });
+            }
+            
+            // Es un archivo Excel, obtener el nombre del archivo del header
+            const contentDisposition = response.headers.get('content-disposition');
+            let fileName = 'empleados_export.xlsx';
+            if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (fileNameMatch && fileNameMatch[1]) {
+                    fileName = fileNameMatch[1].replace(/['"]/g, '');
+                }
+            }
+            
+            return response.blob().then(blob => ({ blob, fileName }));
+        })
+        .then(({ blob, fileName }) => {
+            console.log('Archivo Excel recibido, iniciando descarga...', fileName);
+            
+            // Crear link de descarga
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Limpiar recursos
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            excelUploadMsg.innerHTML = '<div class="success-message"><i class="bx bx-check-circle"></i> ✅ Archivo descargado exitosamente: <strong>' + fileName + '</strong></div>';
+            
+            // Auto-limpiar después de 10 segundos
+            setTimeout(() => {
+                excelUploadMsg.innerHTML = '';
+                uploadProgress.style.display = 'none';
+            }, 10000);
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            console.error('Error en exportación:', error);
+            
+            let errorMessage = 'Error al generar el archivo de exportación';
+            
+            if (error.message.includes('HTTP error')) {
+                errorMessage = `Error del servidor: ${error.message}`;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            excelUploadMsg.innerHTML = '<div class="error-message"><i class="bx bx-error-circle"></i> ❌ ' + errorMessage + '</div>';
+            uploadProgress.style.display = 'none';
+        });
+    }
+
+    // NUEVAS FUNCIONES PARA MODAL DE ELIMINACIÓN
+    function showDeleteModal() {
+        deleteConfirmationModal.style.display = 'flex';
+        deletePasswordInput.value = '';
+        passwordError.style.display = 'none';
+        deletePasswordInput.focus();
+    }
+
+    function hideDeleteModal() {
+        deleteConfirmationModal.style.display = 'none';
+        deletePasswordInput.value = '';
+        passwordError.style.display = 'none';
+    }
+
+    function togglePasswordVisibility() {
+        const isPassword = deletePasswordInput.type === 'password';
+        deletePasswordInput.type = isPassword ? 'text' : 'password';
+        toggleDeletePassword.innerHTML = isPassword ? '<i class="bx bx-show"></i>' : '<i class="bx bx-hide"></i>';
+    }
+
+    // FUNCIÓN PARA VALIDAR CONTRASEÑA
+    async function validatePassword(password) {
+        try {
+            const token = document.querySelector('#excel-upload-form input[name="__RequestVerificationToken"]')?.value;
+            
+            // CAMBIAR A LA NUEVA RUTA
+            const response = await fetch('/PreInducciones/index_PRE?handler=ValidatePassword', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token || ''
+                },
+                body: JSON.stringify({ password: password })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Password validation response:', data);
+            return data.valid;
+        } catch (error) {
+            console.error('Error validating password:', error);
+            return false;
+        }
+    }
+
+// FUNCIÓN PARA ELIMINAR BASE DE DATOS
+async function deleteDatabase() {
+    const password = deletePasswordInput.value;
+
+    if (!password) {
+            passwordError.textContent = 'Por favor ingresa tu contraseña';
+            passwordError.style.display = 'block';
+            return;
+        }
+
+        // Deshabilitar botón durante validación
+        confirmDeleteBtn.disabled = true;
+        confirmDeleteBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Validando...';
+
+        // Validar contraseña
+        const isValidPassword = await validatePassword(password);
+        
+        if (!isValidPassword) {
+            passwordError.textContent = 'Contraseña incorrecta';
+            passwordError.style.display = 'block';
+            confirmDeleteBtn.disabled = false;
+            confirmDeleteBtn.innerHTML = '<i class="bx bx-trash"></i> Eliminar Todo';
+            return;
+        }
+
+        // Cambiar texto del botón
+        confirmDeleteBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Eliminando...';
+
+        try {
+            const token = document.querySelector('#excel-upload-form input[name="__RequestVerificationToken"]')?.value;
+            
+            const response = await fetch('/PreInducciones/index_PRE?handler=DeleteDatabase', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token || '',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Ocultar modal
+                hideDeleteModal();
+                
+                // Mostrar mensaje de éxito
+                excelUploadMsg.innerHTML = '<div class="success-message"><i class="bx bx-check-circle"></i> ✅ Base de datos eliminada exitosamente. Se eliminaron ' + data.deletedCount + ' registros.</div>';
+                
+                // Auto-limpiar después de 10 segundos
+                setTimeout(() => {
+                    excelUploadMsg.innerHTML = '';
+                }, 10000);
+            } else {
+                throw new Error(data.message || 'Error desconocido');
+            }
+        } catch (error) {
+            console.error('Error deleting database:', error);
+            passwordError.textContent = 'Error al eliminar la base de datos: ' + error.message;
+            passwordError.style.display = 'block';
+        } finally {
+            confirmDeleteBtn.disabled = false;
+            confirmDeleteBtn.innerHTML = '<i class="bx bx-trash"></i> Eliminar Todo';
+        }
+    }
+    sidebarToggleBtn?.addEventListener('click', toggleSidebarCollapse);
+    mobileMenuBtn?.addEventListener('click', toggleSidebar);
+    mobileOverlay?.addEventListener('click', toggleSidebar);
+    darkModeToggle?.addEventListener('click', toggleDarkMode);
+    document.querySelector('.logo')?.addEventListener('dblclick', toggleSidebarCollapse);
+    mostrarCargaBtn?.addEventListener('click', toggleExcelDropArea);
+    excelUploadBtn?.addEventListener('click', () => excelInput?.click());
+    excelExportBtn?.addEventListener('click', handleExportData);
+    deleteDatabaseBtn?.addEventListener('click', showDeleteModal);
+    closeDeleteModal?.addEventListener('click', hideDeleteModal);
+    cancelDeleteBtn?.addEventListener('click', hideDeleteModal);
+    confirmDeleteBtn?.addEventListener('click', deleteDatabase);
+    toggleDeletePassword?.addEventListener('click', togglePasswordVisibility);
+
+    excelInput?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleFileUpload(file);
+        }
+    });
+
+    // DRAG AND DROP FUNCTIONALITY
+    excelDropArea?.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        excelDropArea.style.backgroundColor = '#f0f9ff';
+        excelDropArea.style.borderColor = '#3b82f6';
+    });
+
+    excelDropArea?.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        excelDropArea.style.backgroundColor = '';
+        excelDropArea.style.borderColor = '';
+    });
+
+    excelDropArea?.addEventListener('drop', function(e) {
+        e.preventDefault();
+        excelDropArea.style.backgroundColor = '';
+        excelDropArea.style.borderColor = '';
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.name.endsWith('.xlsx') || file.name.endsWith('.xlsm')) {
+                handleFileUpload(file);
+            } else {
+                excelUploadMsg.innerHTML = '<div class="error-message"><i class="bx bx-error-circle"></i> ❌ Por favor selecciona un archivo Excel válido (.xlsx o .xlsm)</div>';
+            }
+        }
+    });
+
+    // EVENTOS DE TECLADO PARA EL MODAL
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && deleteConfirmationModal.style.display === 'flex') {
+            hideDeleteModal();
+        }
+    });
+
+    // CERRAR MODAL HACIENDO CLIC FUERA
+    deleteConfirmationModal?.addEventListener('click', function(e) {
+        if (e.target === deleteConfirmationModal) {
+            hideDeleteModal();
+        }
+    });
+
+    // ENTER PARA CONFIRMAR ELIMINACIÓN
+    deletePasswordInput?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            deleteDatabase();
+        }
+    });
+
+    // RESIZE Y LOAD EVENTS
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 1024) {
+            sidebar?.classList.remove('open');
+            mobileOverlay?.classList.remove('active');
+            if (menuIcon) menuIcon.className = 'bx bx-menu';
+            sidebarOpen = false;
+        } else {
+            sidebar?.classList.remove('collapsed');
+            mainContent?.classList.remove('sidebar-collapsed');
+            sidebarCollapsed = false;
+            if (toggleIcon) toggleIcon.className = 'bx bx-chevron-left';
+        }
+    });
+
+    window.addEventListener('load', function() {
+        const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (savedDarkMode) {
+            toggleDarkMode();
+        }
+        
+        if (window.innerWidth >= 1024) {
+            const savedSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (savedSidebarCollapsed) {
+                toggleSidebarCollapse();
+            }
+        }
+    });
+
+</script>
+
+</body>

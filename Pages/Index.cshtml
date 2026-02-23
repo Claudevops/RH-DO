@@ -1,0 +1,282 @@
+﻿@page
+@model IndexModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Esval/ADV - Panel de Control";
+}
+
+<link rel="stylesheet" href="~/css/Index.css">
+<link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo">
+                    @((User.Identity?.Name != null && User.Identity.Name.Length > 0) 
+                        ? User.Identity.Name.Substring(0, 1).ToUpper() 
+                        : "")
+                </div>
+                <div class="logo-text">
+                    <div class="logo-title">Esval/ADV</div>
+                    <div class="logo-subtitle">
+                        Recursos Humanos
+                        <br>
+                        <span style="font-size: 0.85em; color: var(--secondary-blue); font-weight: 500;">
+                            @User.Identity?.Name
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn">
+                <i class='bx bx-chevron-left' id="toggleIcon"></i>
+            </button>
+        </div>
+
+
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/index" class="nav-link active">
+                        <i class='bx bx-home-alt nav-icon'></i>
+                        <span class="nav-text">Inicio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PreInducciones/index_PRE" class="nav-link">
+                        <i class='bx bx-book-open nav-icon'></i>
+                        <span class="nav-text">Inducciones</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PostInducciones/index_POST" class="nav-link">
+                        <i class='bx bx-user-check nav-icon'></i>
+                        <span class="nav-text">Post Inducciones</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="mode-toggle">
+                <div class="mode-info">
+                    <i class='bx bx-moon nav-icon' id="modeIcon"></i>
+                    <span class="nav-text" id="modeText">Modo Oscuro</span>
+                </div>
+                <div class="toggle-switch" id="darkModeToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            <a href="/Login/Logout" class="logout-link">
+                <i class='bx bx-log-out nav-icon'></i>
+                <span class="nav-text">Salir</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class='bx bx-menu' id="menuIcon"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="content-wrapper">
+            <!-- Header -->
+            <header class="page-header">
+                <h1 class="page-title">Panel de Control - Analisis Y graficos</h1>
+                <p class="page-subtitle">Sistema de automatización para gestión del personal</p>
+            </header>
+
+            <!-- Modules Grid -->
+            <section class="modules-grid">
+                <div class="module-card" onclick="window.location.href='/PreInducciones/index_PRE'">
+                    <div class="module-header blue-gradient"></div>
+                    <div class="module-content">
+                        <div class="module-info">
+                            <div class="module-icon blue-gradient">📚</div>
+                            <div class="module-details">
+                                <h3>Módulo Pre Inducciones</h3>
+                                <p>Automatiza la subida de nuevos ingresos y gestiona el proceso de inducción previo al ingreso del personal</p>
+                            </div>
+                        </div>
+                        <div class="module-action">
+                            <button class="action-btn">Acceder →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card" onclick="window.location.href='/postinducciones/index_POST'">
+                    <div class="module-header light-gradient"></div>
+                    <div class="module-content">
+                        <div class="module-info">
+                            <div class="module-icon light-gradient">🎓</div>
+                            <div class="module-details">
+                                <h3>Módulo Post Inducciones</h3>
+                                <p>Seguimiento posterior al proceso de inducción, automatización de correos electrónicos y reportes</p>
+                            </div>
+                        </div>
+                        <div class="module-action">
+                            <button class="action-btn">Acceder →</button>
+                        </div>
+                    </div>
+                </div>
+
+                
+            </section>
+        </div>
+    </main>
+<script>
+        // Agregar variables para el nuevo botón
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const toggleIcon = document.getElementById('toggleIcon');
+
+        // Variables globales
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const menuIcon = document.getElementById('menuIcon');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const modeIcon = document.getElementById('modeIcon');
+        const modeText = document.getElementById('modeText');
+        const body = document.body;
+
+        // Modificar las variables iniciales
+        let sidebarOpen = false;
+        let sidebarCollapsed = false;
+        let darkMode = false;
+
+        // función para el botón toggle del sidebar
+function toggleSidebarCollapse() {
+    sidebarCollapsed = !sidebarCollapsed;
+    
+    if (sidebarCollapsed) {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('sidebar-collapsed');
+    } else {
+        sidebar.classList.remove('collapsed');
+        mainContent.classList.remove('sidebar-collapsed');
+    }
+    
+    // Guardar estado en localStorage
+    localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+}
+
+        // Función para toggle del sidebar en móvil
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            
+            if (sidebarOpen) {
+                sidebar.classList.add('open');
+                mobileOverlay.classList.add('active');
+                menuIcon.className = 'bx bx-x';
+            } else {
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+            }
+        }
+
+        // Función para toggle del modo oscuro
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            
+            if (darkMode) {
+                body.classList.add('dark');
+                modeIcon.className = 'bx bx-sun nav-icon';
+                modeText.textContent = 'Modo Claro';
+            } else {
+                body.classList.remove('dark');
+                modeIcon.className = 'bx bx-moon nav-icon';
+                modeText.textContent = 'Modo Oscuro';
+            }
+            
+            // Guardar preferencia en localStorage
+            localStorage.setItem('darkMode', darkMode);
+        }
+
+        // Agregar event listener para el botón toggle
+        sidebarToggleBtn.addEventListener('click', toggleSidebarCollapse);
+
+        // Event listeners
+        mobileMenuBtn.addEventListener('click', toggleSidebar);
+        mobileOverlay.addEventListener('click', toggleSidebar);
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+
+        // Double click en logo para colapsar sidebar en desktop
+        document.querySelector('.logo').addEventListener('dblclick', toggleSidebarCollapse);
+
+        // Modificar la función de resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                // Desktop
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+                sidebarOpen = false;
+            } else {
+                // Mobile
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+                sidebarCollapsed = false;
+                toggleIcon.className = 'bx bx-chevron-left';
+            }
+        });
+
+        // Modificar la función de carga inicial
+        window.addEventListener('load', function() {
+            // Cargar modo oscuro
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (savedDarkMode) {
+                toggleDarkMode();
+            }
+            
+            // Cargar estado del sidebar en desktop
+            if (window.innerWidth >= 1024) {
+                const savedSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedSidebarCollapsed) {
+                    toggleSidebarCollapse();
+                }
+            }
+        });
+
+        // Animación suave para las tarjetas
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observar las tarjetas de módulos
+        document.querySelectorAll('.module-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+
+        // Efecto hover para las tarjetas de estadísticas
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+</script>
+
+</body>

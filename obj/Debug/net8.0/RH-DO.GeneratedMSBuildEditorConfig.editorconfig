@@ -1,0 +1,99 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = RH_DO
+build_property.RootNamespace = RH_DO
+build_property.ProjectDir = C:\Users\ccalderon.practica\Documents\Projecto Esval\RH-DO\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\ccalderon.practica\Documents\Projecto Esval\RH-DO
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/Login/login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW5cbG9naW4uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/Login/Logout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW5cTG9nb3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/PostInducciones/index_POST.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUG9zdEluZHVjY2lvbmVzXGluZGV4X1BPU1QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/PostInducciones/Utilidades_post/config_post.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUG9zdEluZHVjY2lvbmVzXFV0aWxpZGFkZXNfcG9zdFxjb25maWdfcG9zdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/PreInducciones/DatosyCorreos/DatosyCorreos.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlSW5kdWNjaW9uZXNcRGF0b3N5Q29ycmVvc1xEYXRvc3lDb3JyZW9zLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/PreInducciones/ImportarExcel.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlSW5kdWNjaW9uZXNcSW1wb3J0YXJFeGNlbC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/PreInducciones/index_PRE.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlSW5kdWNjaW9uZXNcaW5kZXhfUFJFLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/PreInducciones/Utilidades_PRE/Configuracion_PRE.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlSW5kdWNjaW9uZXNcVXRpbGlkYWRlc19QUkVcQ29uZmlndXJhY2lvbl9QUkUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/PreInducciones/Utilidades_PRE/Edicion_Plani.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlSW5kdWNjaW9uZXNcVXRpbGlkYWRlc19QUkVcRWRpY2lvbl9QbGFuaS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/PreInducciones/Utilidades_PRE/Plani.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlSW5kdWNjaW9uZXNcVXRpbGlkYWRlc19QUkVcUGxhbmkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJpdmFjeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/Solicitudes/SolicitudesEdicion.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU29saWNpdHVkZXNcU29saWNpdHVkZXNFZGljaW9uLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ccalderon.practica/Documents/Projecto Esval/RH-DO/Pages/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-w72qtknpx4

@@ -1,0 +1,667 @@
+@page  
+@model Configuracion_POSTModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Edición de Configuración POST";
+}
+
+<head>
+<link rel="stylesheet" href="~/css/Edicion_Plani.css">
+<link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js">
+window.CKEDITOR_TRANSLATIONS = window.CKEDITOR_TRANSLATIONS || {};
+window.CKEDITOR_TRANSLATIONS['es'] = true;
+</script>
+</head>
+
+<body>
+@Html.AntiForgeryToken()
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo">
+                    @((User.Identity?.Name != null && User.Identity.Name.Length > 0) 
+                        ? User.Identity.Name.Substring(0, 1).ToUpper() 
+                        : "")
+                </div>
+                <div class="logo-text">
+                    <div class="logo-title">Esval/ADV</div>
+                    <div class="logo-subtitle">
+                        Recursos Humanos
+                        <br>
+                        <span style="font-size: 0.85em; color: var(--secondary-blue); font-weight: 500;">
+                            @User.Identity?.Name
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn">
+                <i class='bx bx-chevron-left' id="toggleIcon"></i>
+            </button>
+        </div>
+
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/index" class="nav-link">
+                        <i class='bx bx-home-alt nav-icon'></i>
+                        <span class="nav-text">Inicio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PreInducciones/index_PRE" class="nav-link">
+                        <i class='bx bx-book-open nav-icon'></i>
+                        <span class="nav-text">Inducciones</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PostInducciones/index_POST" class="nav-link active">
+                        <i class='bx bx-user-check nav-icon'></i>
+                        <span class="nav-text">Post Inducciones</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="mode-toggle">
+                <div class="mode-info">
+                    <i class='bx bx-moon nav-icon' id="modeIcon"></i>
+                    <span class="nav-text" id="modeText">Modo Oscuro</span>
+                </div>
+                <div class="toggle-switch" id="darkModeToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            
+            @if (Model.EsAdmin)
+            {
+                <a href="/PreInducciones/Utilidades_PRE/Configuracion_PRE" class="config-link">
+                    <i class='bx bx-cog nav-icon'></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+                
+                <div class="notifications-indicator @(Model.SolicitudesPendientes > 0 ? "has-notifications" : "")">
+                    <i class='bx bx-notification nav-icon'></i>
+                    <span class="nav-text">Notificaciones</span>
+                    @if (Model.SolicitudesPendientes > 0)
+                    {
+                        <span class="notification-badge">@Model.SolicitudesPendientes</span>
+                    }
+                    <span class="tooltip">
+                        @if (Model.SolicitudesPendientes > 0)
+                        {
+                            <text>@Model.SolicitudesPendientes notificación@(Model.SolicitudesPendientes == 1 ? "" : "es") pendiente@(Model.SolicitudesPendientes == 1 ? "" : "s")</text>
+                        }
+                        else
+                        {
+                            <text>Sin notificaciones</text>
+                        }
+                    </span>
+                </div>
+            }
+            
+            <a href="/Login/logout" class="logout-link">
+                <i class='bx bx-log-out nav-icon'></i>
+                <span class="nav-text">Salir</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" style="display:none;">
+        <i class='bx bx-menu' id="menuIcon"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="content-wrapper">
+            <!-- Header -->
+            <header class="page-header">
+                <h1 class="page-title">
+                    <span class="header-icon">💧</span>
+                    Edición del Formulario
+                </h1>
+            </header>
+
+            <!-- APARTADO DE CORREOS-->
+            <section class="email-configuration-section">
+                <!-- Selector de Tipo de Correo -->
+                <div class="email-type-selector">
+                    <div class="selector-header">
+                        <div class="selector-icon">
+                            <i class='bx bx-list-ul'></i>
+                        </div>
+                        <h2 class="selector-title">Seleccionar Tipo de Correo</h2>
+                    </div>
+                    
+                    <form method="get" class="selector-form">
+                        <label for="tipoSeleccionado">Selecciona el tipo de correo:</label>
+                        <select name="TipoSeleccionado" id="tipoSeleccionado" onchange="this.form.submit()">
+                            <option value="1" selected="@(Model.TipoSeleccionado == 1 ? "selected" : null)">Correo Encuesta satisfacción a la jefatura de persona seleccionada</option>
+                            <option value="2" selected="@(Model.TipoSeleccionado == 2 ? "selected" : null)">Correo Encuesta satisfacción a la persona seleccionada</option>
+                            <option value="3" selected="@(Model.TipoSeleccionado == 3 ? "selected" : null)">Correo Encuesta eficacia jefaturas</option>
+                            <option value="4" selected="@(Model.TipoSeleccionado == 4 ? "selected" : null)">Correo Encuesta Evaluación técnica jefaturas</option>
+                            <option value="6" selected="@(Model.TipoSeleccionado == 6 ? "selected" : null)">Correo IMPORTANTE: Consulta por accesos y elementos corporativos</option>
+                        </select>
+                    </form>
+                </div>
+
+                @if (Model.CorreoConfig != null)
+                {
+                    <form method="post" enctype="multipart/form-data" asp-page-handler="GuardarCorreoConfig">
+                        <input type="hidden" name="TipoSeleccionado" value="@Model.TipoSeleccionado" />
+                        <input type="hidden" name="Tipo" value="@(Model.TipoSeleccionado ?? 1)" />
+                        <input type="hidden" name="Tipo_DCP" value="@(Model.TipoSeleccionado ?? 1)" />
+                        <input type="hidden" name="Id_DCP" value="@Model.CorreoConfig?.Destinatarios?.Id_DCP" />
+                        <input type="hidden" name="Id_PC" value="@Model.CorreoConfig?.Plantilla?.Id_PC" />
+    
+                        <div class="unified-config-card">
+                            <div class="unified-config-header">
+                                <div class="unified-config-icon">
+                                    <i class='bx bx-envelope-open'></i>
+                                </div>
+                                <h3 class="unified-config-title">Configuración de Correo</h3>
+                                <div class="config-warning-message">
+                                    <p style="color: black; font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">
+                                        <i class='bx bx-info-circle' style="margin-right: 5px;"></i>
+                                        No eliminar las etiquetas { emp.&lt;Dato&gt; }
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="unified-config-content">
+                                <div class="config-section">
+                                    <div class="section-header">
+                                        <div class="section-icon subject-icon">
+                                            <i class='bx bx-text'></i>
+                                        </div>
+                                        <h4 class="section-title">Asunto del Correo</h4>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nombrePC">Asunto:</label>
+                                        <input type="text" 
+                                               id="nombrePC"
+                                               name="Nombre_PC" 
+                                               value="@Model.CorreoConfig.Plantilla?.Nombre_PC" 
+                                               placeholder="Asunto del correo" 
+                                               required />
+                                    </div>
+                                </div>
+
+                                <!-- Destinatarios -->
+                                <div class="config-section">
+                                    <div class="section-header">
+                                        <div class="section-icon recipients-icon">
+                                            <i class='bx bx-group'></i>
+                                        </div>
+                                        <h4 class="section-title">Destinatarios</h4>
+                                    </div>
+                                    <div class="recipients-grid">
+                                        <div class="form-group">
+                                            <label for="destinatariosFijos">Principales:</label>
+                                            <input type="text" 
+                                                   id="destinatariosFijos"
+                                                   name="DestinatariosFijos" 
+                                                   value="@Model.CorreoConfig.Destinatarios?.DestinatariosFijos"
+                                                   placeholder="Ingrese destinatarios separados por ';'" />
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="ccFijos">CC:</label>
+                                            <input type="text" 
+                                                   id="ccFijos"
+                                                   name="CCFijos" 
+                                                   value="@Model.CorreoConfig.Destinatarios?.CCFijos"
+                                                   placeholder="Ingrese destinatarios CC separados por ';'" />
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="ccoFijos">CCO:</label>
+                                            <input type="text" 
+                                                   id="ccoFijos"
+                                                   name="CCOFijos" 
+                                                   value="@Model.CorreoConfig.Destinatarios?.CCOFijos"
+                                                   placeholder="Ingrese destinatarios CCO separados por ';'" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Adjuntos -->
+                                <div class="config-section">
+                                    <div class="section-header">
+                                        <div class="section-icon attachments-icon">
+                                            <i class='bx bx-paperclip'></i>
+                                        </div>
+                                        <h4 class="section-title">Adjuntos</h4>
+                                    </div>
+                                    
+                                    <div class="attachments-container">
+                                        <!-- Adjuntos actuales y nuevo adjunto en dos columnas -->
+                                        <div class="attachments-grid">
+                                            <!-- Columna izquierda: Adjuntos actuales -->
+                                            <div class="current-attachments-column">
+                                                @if (Model.CorreoConfig.Adjuntos.Any())
+                                                {
+                                                    <h5 class="attachments-subtitle">Adjuntos Actuales:</h5>
+                                                    <ul class="attachment-list">
+                                                        @foreach (var adj in Model.CorreoConfig.Adjuntos)
+                                                        {
+                                                            <li class="attachment-item">
+                                                                <div class="attachment-info">
+                                                                    <div class="attachment-file-icon">
+                                                                        <i class='bx bx-file'></i>
+                                                                    </div>
+                                                                    <span class="attachment-name">@adj.Nombre_Adjunto</span>
+                                                                </div>
+                                                                <div class="attachment-actions">
+                                                                    <input type="checkbox" 
+                                                                           class="checkbox-delete"
+                                                                           name="EliminarAdjuntos" 
+                                                                           value="@adj.Id_AC" 
+                                                                           id="delete_@adj.Id_AC" />
+                                                                    <label for="delete_@adj.Id_AC" class="delete-label">Eliminar</label>
+                                                                </div>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                }
+                                                else
+                                                {
+                                                    <div class="no-attachments">
+                                                        <i class='bx bx-file-blank'></i>
+                                                        <p>No hay adjuntos configurados</p>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                            <!-- Columna derecha: Drag & Drop y formulario -->
+                                            <div class="new-attachments-column">
+                                                <h5 class="attachments-subtitle">Agregar Nuevo Adjunto:</h5>
+                                                
+                                                <!-- Zona de Drag & Drop -->
+                                                <div class="drag-drop-zone" id="dragDropZone">
+                                                    <div class="drag-drop-content">
+                                                        <i class='bx bx-cloud-upload drag-drop-icon'></i>
+                                                        <p class="drag-drop-text">Arrastra archivos aquí</p>
+                                                        <p class="drag-drop-subtext">o haz clic para seleccionar</p>
+                                                    </div>
+                                                    <input type="file" 
+                                                           id="archivo"
+                                                           name="Archivo" 
+                                                           class="drag-drop-input"
+                                                           onchange="handleFileSelect(this)" />
+                                                </div>
+
+                                                <!-- Formulario tradicional -->
+                                                <div class="traditional-upload">
+                                                    <div class="form-group">
+                                                        <label for="nombreAdjuntoInput">Nombre del archivo:</label>
+                                                        <input type="text" 
+                                                               id="nombreAdjuntoInput" 
+                                                               name="Nombre_Adjunto" 
+                                                               placeholder="Nombre del archivo" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Plantilla de Correo -->
+                                <div class="config-section">
+                                    <div class="section-header">
+                                        <div class="section-icon template-icon">
+                                            <i class='bx bx-code-alt'></i>
+                                        </div>
+                                        <h4 class="section-title">Plantilla de Correo</h4>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="editor">Contenido HTML:</label>
+                                        <div class="editor-wrapper">
+                                            <textarea id="editor" 
+                                                      name="HtmlContenido" 
+                                                      rows="10">@Model.CorreoConfig.Plantilla?.HtmlContenido</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botón de Guardar -->
+                            <div class="save-section">
+                                <button type="submit" class="btn-save">
+                                    <i class='bx bx-save'></i>
+                                    Guardar Todo
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                }
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Sidebar functionality - Copiado del diseño anterior
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const menuIcon = document.getElementById('menuIcon');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const modeIcon = document.getElementById('modeIcon');
+        const modeText = document.getElementById('modeText');
+        const body = document.body;
+
+        let sidebarOpen = false;
+        let sidebarCollapsed = false;
+        let darkMode = false;
+
+        function toggleSidebarCollapse() {
+            sidebarCollapsed = !sidebarCollapsed;
+                        
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+            }
+                        
+            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+        }
+
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+                        
+            if (sidebarOpen) {
+                sidebar.classList.add('open');
+                mobileOverlay.classList.add('active');
+                menuIcon.className = 'bx bx-x';
+            } else {
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+            }
+        }
+
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+                        
+            if (darkMode) {
+                body.classList.add('dark');
+                modeIcon.className = 'bx bx-sun nav-icon';
+                modeText.textContent = 'Modo Claro';
+            } else {
+                body.classList.remove('dark');
+                modeIcon.className = 'bx bx-moon nav-icon';
+                modeText.textContent = 'Modo Oscuro';
+            }
+                        
+            localStorage.setItem('darkMode', darkMode);
+        }
+
+        // Event listeners
+        sidebarToggleBtn.addEventListener('click', toggleSidebarCollapse);
+        mobileMenuBtn.addEventListener('click', toggleSidebar);
+        mobileOverlay.addEventListener('click', toggleSidebar);
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        document.querySelector('.logo').addEventListener('dblclick', toggleSidebarCollapse);
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+                sidebarOpen = false;
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+                sidebarCollapsed = false;
+                toggleIcon.className = 'bx bx-chevron-left';
+            }
+        });
+
+        window.addEventListener('load', function() {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (savedDarkMode) {
+                toggleDarkMode();
+            }
+                        
+            if (window.innerWidth >= 1024) {
+                const savedSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedSidebarCollapsed) {
+                    toggleSidebarCollapse();
+                }
+            }
+        });
+
+        // Upload functionality - Mantenido exactamente igual
+        const dropArea = document.getElementById('excel-drop-area');
+        const input = document.getElementById('excel-input');
+        const btn = document.getElementById('excel-upload-btn');
+        const msg = document.getElementById('excel-upload-msg');
+
+        if (btn) btn.onclick = () => input.click();
+
+        if (dropArea) {
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('dragover');
+            });
+
+            dropArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('dragover');
+            });
+
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('dragover');
+                input.files = e.dataTransfer.files;
+                handleUpload(input.files[0]);
+            });
+        }
+
+        if (input) {
+            input.addEventListener('change', () => {
+                if (input.files.length > 0) handleUpload(input.files[0]);
+            });
+        }
+
+        function handleUpload(file) {
+            if (msg) msg.innerHTML = '<span style="color: #06a6e0;">Subiendo archivo...</span>';
+            const formData = new FormData();
+            formData.append('excel_file', file);
+                        
+            // Aquí mantienes tu URL original de Django
+            fetch('/index_inducciones/importar_empleados_excel/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (msg) {
+                    msg.innerHTML = data.success ?
+                         '<span style="color: #10b981;">' + data.message + '</span>' :
+                         '<span style="color: #ef4444;">' + data.message + '</span>';
+                }
+            })
+            .catch(() => {
+                if (msg) msg.innerHTML = '<span style="color: #ef4444;">Error al subir el archivo.</span>';
+            });
+        }
+
+        const mostrarCargaBtn = document.getElementById('mostrar-carga-btn');
+        const excelDropArea = document.getElementById('excel-drop-area');
+        if (mostrarCargaBtn && excelDropArea) {
+            mostrarCargaBtn.addEventListener('click', function() {
+                if (excelDropArea.style.display === 'block') {
+                    excelDropArea.style.display = 'none';
+                    mostrarCargaBtn.innerHTML = "<i class='bx bxs-file-import'></i> ¿Subir Excel?";
+                } else {
+                    excelDropArea.style.display = 'block';
+                    mostrarCargaBtn.innerHTML = "<i class='bx bx-x'></i> Cerrar";
+                }
+            });
+        }
+
+        // Agregar confirmación para eliminar
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('button[style*="background:#dc2626"]').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (!confirm('¿Estás seguro de que deseas eliminar este elemento?')) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+
+        // Función para editar inline
+        function toggleEdit(button) {
+            const row = button.closest('.item-row');
+            const nameDiv = row.querySelector('.item-name');
+            const editInput = row.querySelector('.edit-input');
+            const saveBtn = row.querySelector('.btn-save');
+                
+            if (editInput.style.display === 'none' || !editInput.style.display) {
+                // Mostrar modo edición
+                nameDiv.style.display = 'none';
+                editInput.style.display = 'inline-block';
+                editInput.value = nameDiv.textContent.trim();
+                button.style.display = 'none';
+                saveBtn.style.display = 'inline-flex';
+                editInput.focus();
+            }
+        }
+
+        // Función para establecer el nombre del adjunto en el campo de texto
+        function setNombreAdjunto(fileInput, textInputId) {
+            const file = fileInput.files[0];
+            if (file) {
+                document.getElementById(textInputId).value = file.name;
+            }
+        }
+
+        // Validador de dominios de correo
+        function validarDominiosCorreo(input) {
+            const value = input.value.trim();
+            if (!value) return true;
+            const dominios = ["aguasdelvalle.cl", "esval.cl"];
+            return value.split(',').every(correo =>
+                dominios.some(d => correo.trim().toLowerCase().endsWith(d))
+            );
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('form[asp-page-handler="AddDestinatario"], form[asp-page-handler="EditDestinatarios"]').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const inputs = [
+                        form.querySelector('input[name="DestinatariosFijos"]'),
+                        form.querySelector('input[name="CCFijos"]'),
+                        form.querySelector('input[name="CCOFijos"]')
+                    ];
+                    for (const input of inputs) {
+                        if (input && !validarDominiosCorreo(input)) {
+                            alert('Solo se permiten correos de los dominios aguasdelvalle.cl y esval.cl.');
+                            input.focus();
+                            e.preventDefault();
+                            return false;
+                        }
+                    }
+                });
+            });
+        });
+
+        ClassicEditor
+            .create(document.querySelector('#editor'), {
+                language: 'es',
+                toolbar: [
+                    'heading', '|', 'bold', 'italic', 'underline', 'link', 'bulletedList', 'numberedList', 'blockQuote',
+                    '|', 'insertTable', 'tableColumn', 'tableRow', 'mergeTableCells', 'undo', 'redo', 'fontColor', 'fontBackgroundColor'
+                ],
+                table: {
+                    contentToolbar: [ 'tableColumn', 'tableRow', 'mergeTableCells' ]
+                }
+            })
+            .catch(error => {
+                console.error(error);
+            });
+
+        // Funcionalidad de Drag & Drop para adjuntos
+        const dragDropZone = document.getElementById('dragDropZone');
+        const fileInput = document.getElementById('archivo');
+
+        if (dragDropZone && fileInput) {
+            // Prevenir comportamiento por defecto
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dragDropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // Resaltar zona de drop
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dragDropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dragDropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            // Manejar drop
+            dragDropZone.addEventListener('drop', handleDrop, false);
+
+            // Click para abrir selector de archivos
+            dragDropZone.addEventListener('click', () => fileInput.click());
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight() {
+                dragDropZone.classList.add('drag-over');
+            }
+
+            function unhighlight() {
+                dragDropZone.classList.remove('drag-over');
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    handleFileSelect(fileInput);
+                }
+            }
+        }
+
+        function handleFileSelect(input) {
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                document.getElementById('nombreAdjuntoInput').value = file.name;
+                
+                // Actualizar UI de drag & drop
+                const dragDropText = dragDropZone.querySelector('.drag-drop-text');
+                const dragDropSubtext = dragDropZone.querySelector('.drag-drop-subtext');
+                
+                if (dragDropText && dragDropSubtext) {
+                    dragDropText.textContent = file.name;
+                    dragDropSubtext.textContent = 'Archivo seleccionado';
+                    dragDropZone.classList.add('file-selected');
+                }
+            }
+        }
+    </script>
+</body>

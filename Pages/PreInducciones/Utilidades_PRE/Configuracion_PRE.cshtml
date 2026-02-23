@@ -1,0 +1,468 @@
+@page
+@model Configuracion_PRE
+@{
+    Layout = null;
+    ViewData["Title"] = "Configuración de Pre Inducciones";
+}
+
+<link rel="stylesheet" href="~/css/Configuracion_PRE.css">
+<link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+<body>
+    @Html.AntiForgeryToken()
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo">
+                    @((User.Identity?.Name != null && User.Identity.Name.Length > 0) 
+                        ? User.Identity.Name.Substring(0, 1).ToUpper() 
+                        : "")
+                </div>
+                <div class="logo-text">
+                    <div class="logo-title">Esval/ADV</div>
+                    <div class="logo-subtitle">
+                        Recursos Humanos
+                        <br>
+                        <span style="font-size: 0.85em; color: var(--secondary-blue); font-weight: 500;">
+                            @User.Identity?.Name
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn">
+                <i class='bx bx-chevron-left' id="toggleIcon"></i>
+            </button>
+        </div>
+
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/index" class="nav-link">
+                        <i class='bx bx-home-alt nav-icon'></i>
+                        <span class="nav-text">Inicio</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PreInducciones/index_PRE" class="nav-link active">
+                        <i class='bx bx-book-open nav-icon'></i>
+                        <span class="nav-text">Inducciones</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/PostInducciones/index_POST" class="nav-link">
+                        <i class='bx bx-user-check nav-icon'></i>
+                        <span class="nav-text">Post Inducciones</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="mode-toggle">
+                <div class="mode-info">
+                    <i class='bx bx-moon nav-icon' id="modeIcon"></i>
+                    <span class="nav-text" id="modeText">Modo Oscuro</span>
+                </div>
+                <div class="toggle-switch" id="darkModeToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            
+            @if (Model.EsAdmin)
+            {
+                <a href="/PreInducciones/Utilidades_PRE/Configuracion_PRE" class="config-link">
+                    <i class='bx bx-cog nav-icon'></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+                
+                <div class="notifications-indicator @(Model.SolicitudesPendientes > 0 ? "has-notifications" : "")">
+                    <i class='bx bx-notification nav-icon'></i>
+                    <span class="nav-text">Notificaciones</span>
+                    @if (Model.SolicitudesPendientes > 0)
+                    {
+                        <span class="notification-badge">@Model.SolicitudesPendientes</span>
+                    }
+                    <span class="tooltip">
+                        @if (Model.SolicitudesPendientes > 0)
+                        {
+                            <text>@Model.SolicitudesPendientes notificación@(Model.SolicitudesPendientes == 1 ? "" : "es") pendiente@(Model.SolicitudesPendientes == 1 ? "" : "s")</text>
+                        }
+                        else
+                        {
+                            <text>Sin notificaciones</text>
+                        }
+                    </span>
+                </div>
+            }
+            
+            <a href="/Login/logout" class="logout-link">
+                <i class='bx bx-log-out nav-icon'></i>
+                <span class="nav-text">Salir</span>
+            </a>
+        </div>
+    </aside>
+
+
+
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class='bx bx-menu' id="menuIcon"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="content-wrapper">
+            <!-- Header -->
+            <header class="page-header">
+                <h1 class="page-title">
+                    <span class="header-icon">💧</span> <!-- Colocar el icono de esval. -->
+                    Bienvenido al Panel de Inducciones
+                </h1>
+            </header>
+
+            <!-- Options Section -->
+            <section class="options-section">
+                <h2 class="section-title">Opciones disponibles</h2>
+                
+                <div class="options-grid">
+                    <div class="option-card" data-target="/Solicitudes/SolicitudesEdicion"> 
+                        <i class='bx bx-notification'></i>
+                        <div class="option-title">Solicitudes</div>
+                        <div class="option-description">Gestiona las solicitudes de cambio de los nuevos trabajadores</div>
+                    </div>
+
+                    <div class="option-card" data-target="/PreInducciones/Utilidades_PRE/Edicion_Plani">
+                        <i class='bx bx-cog nav-icon'></i>
+                        <div class="option-title">Configuración Panel PRE Inducciones</div>
+                        <div class="option-description">Configuración general del panel de PRE inducciones</div>
+                    </div>
+
+                    <div class="option-card" data-target="/PostInducciones/Utilidades_POST/config_post">
+                        <i class='bx bx-cog nav-icon'></i>
+                        <div class="option-title">Configuración Panel POST Inducciones</div>
+                        <div class="option-description">Configuración general del panel de POST  inducciones</div>
+                    </div>
+                    
+                    <div class="option-card" data-target="admin-management" data-is-special="true">
+                        <i class='bx bx-user'></i>
+                        <div class="option-title">Configuración de administradores</div>
+                        <div class="option-description">Añada o quite a cuyas personas tendrán acceso total a la pagina <br> (Bajo su Propio Riesgo)</div>
+                    </div>
+                    
+                </div>
+            </section>
+
+            <!-- Sección de administración de usuarios -->
+            <section id="admin-management-section" class="admin-management-section" style="display: none; margin-top: 2rem;">
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <div class="form-card-icon analysts-icon">
+                            <i class='bx bx-user-circle'></i>
+                        </div>
+                        <h2>Administración de Usuarios</h2>
+                    </div>
+                    
+                    <div id="admin-users-container" class="items-container">
+                        <!-- Users will be loaded here dynamically -->
+                        <div class="loading-spinner">Cargando usuarios...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Password Validation Modal -->
+            <div id="password-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>Verificación de Seguridad</h2>
+                    <p>Por favor, ingrese su contraseña para continuar:</p>
+                    <form id="password-form">
+                        <input type="hidden" id="redirect-target" value="">
+                        <input type="hidden" id="is-special-action" value="false">
+                        <div class="form-group">
+                            <input type="password" id="password-input" class="form-input" placeholder="Contraseña" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancel-button" class="btn-cancel">Cancelar</button>
+                            <button type="submit" class="btn-submit">Verificar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        // Sidebar functionality - Copiado del diseño anterior
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const menuIcon = document.getElementById('menuIcon');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const modeIcon = document.getElementById('modeIcon');
+        const modeText = document.getElementById('modeText');
+        const body = document.body;
+
+        let sidebarOpen = false;
+        let sidebarCollapsed = false;
+        let darkMode = false;
+
+        function toggleSidebarCollapse() {
+            sidebarCollapsed = !sidebarCollapsed;
+            
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+            }
+            
+            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+        }
+
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            
+            if (sidebarOpen) {
+                sidebar.classList.add('open');
+                mobileOverlay.classList.add('active');
+                menuIcon.className = 'bx bx-x';
+            } else {
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+            }
+        }
+
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            
+            if (darkMode) {
+                body.classList.add('dark');
+                modeIcon.className = 'bx bx-sun nav-icon';
+                modeText.textContent = 'Modo Claro';
+            } else {
+                body.classList.remove('dark');
+                modeIcon.className = 'bx bx-moon nav-icon';
+                modeText.textContent = 'Modo Oscuro';
+            }
+            
+            localStorage.setItem('darkMode', darkMode);
+        }
+
+        
+        sidebarToggleBtn.addEventListener('click', toggleSidebarCollapse);
+        mobileMenuBtn.addEventListener('click', toggleSidebar);
+        mobileOverlay.addEventListener('click', toggleSidebar);
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        document.querySelector('.logo').addEventListener('dblclick', toggleSidebarCollapse);
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.remove('active');
+                menuIcon.className = 'bx bx-menu';
+                sidebarOpen = false;
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+                sidebarCollapsed = false;
+                toggleIcon.className = 'bx bx-chevron-left';
+            }
+        });
+
+        window.addEventListener('load', function() {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (savedDarkMode) {
+                toggleDarkMode();
+            }
+            
+            if (window.innerWidth >= 1024) {
+                const savedSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedSidebarCollapsed) {
+                    toggleSidebarCollapse();
+                }
+            }
+        });
+
+        // Password validation and admin management
+        document.addEventListener('DOMContentLoaded', function() {
+            const optionCards = document.querySelectorAll('.option-card');
+            const passwordModal = document.getElementById('password-modal');
+            const passwordForm = document.getElementById('password-form');
+            const passwordInput = document.getElementById('password-input');
+            const redirectTarget = document.getElementById('redirect-target');
+            const isSpecialAction = document.getElementById('is-special-action');
+            const closeModal = document.querySelector('.close-modal');
+            const cancelButton = document.getElementById('cancel-button');
+            const adminManagementSection = document.getElementById('admin-management-section');
+            
+            // Handle option card clicks
+            optionCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const target = this.getAttribute('data-target');
+                    const isSpecial = this.getAttribute('data-is-special') === 'true';
+                    
+                    // Set hidden fields for form submission
+                    redirectTarget.value = target;
+                    isSpecialAction.value = isSpecial;
+                    
+                    // Show password modal
+                    passwordModal.style.display = 'flex';
+                    passwordInput.focus();
+                });
+            });
+            
+            // Close modal
+            closeModal.addEventListener('click', function() {
+                passwordModal.style.display = 'none';
+                passwordInput.value = '';
+            });
+            
+            cancelButton.addEventListener('click', function() {
+                passwordModal.style.display = 'none';
+                passwordInput.value = '';
+            });
+            
+            // Handle password form submission
+passwordForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const password = passwordInput.value;
+    const target = redirectTarget.value;
+    const isSpecial = isSpecialAction.value === 'true';
+    
+    // Validate password via AJAX
+    try {
+        const response = await fetch('/PreInducciones/Utilidades_PRE/Configuracion_PRE?handler=ValidatePassword', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({ password })
+        });
+        
+        const result = await response.json();
+        
+        if (result.valid) {
+            // Password is valid
+            passwordModal.style.display = 'none';
+            passwordInput.value = '';
+            
+            if (isSpecial) {
+                // Handle special actions like admin management
+                if (target === 'admin-management') {
+                    loadAdminManagement();
+                }
+            } else {
+                // Regular redirect
+                window.location.href = target;
+            }
+        } else {
+            // Password is invalid - log out
+            alert('Contraseña incorrecta. Cerrando sesión por seguridad.');
+            window.location.href = '/Login/logout';
+        }
+    } catch (error) {
+        console.error('Error validating password:', error);
+        alert('Error al validar la contraseña. Inténtelo de nuevo.');
+    }
+});
+
+            
+            // Load admin management
+async function loadAdminManagement() {
+    const container = document.getElementById('admin-users-container');
+    adminManagementSection.style.display = 'block';
+    
+    try {
+        const response = await fetch('/PreInducciones/Utilidades_PRE/Configuracion_PRE?handler=Users');
+        const users = await response.json();
+        
+        // Clear container
+        container.innerHTML = '';
+        
+        // Count admins
+        const adminCount = users.filter(user => user.esAdmin).length;
+        
+        // Render users
+        users.forEach(user => {
+            const userItem = document.createElement('div');
+            userItem.className = 'user-item';
+            
+            const initial = user.nombreUsuario.substring(0, 1).toUpperCase();
+            
+            userItem.innerHTML = `
+                <div class="user-info">
+                    <div class="user-avatar">${initial}</div>
+                    <div>
+                        <div class="user-name">${user.nombreUsuario}</div>
+                        <div class="user-email">${user.correo}</div>
+                    </div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" class="admin-toggle" data-user-id="${user.id}" 
+                        ${user.esAdmin ? 'checked' : ''} 
+                        ${adminCount === 1 && user.esAdmin ? 'disabled' : ''}>
+                    <span class="slider"></span>
+                </label>
+            `;
+            
+            container.appendChild(userItem);
+        });
+                    
+                    // Add event listeners to toggle switches
+        document.querySelectorAll('.admin-toggle').forEach(toggle => {
+            toggle.addEventListener('change', async function() {
+                const userId = this.getAttribute('data-user-id');
+                const isAdmin = this.checked;
+                
+                // If attempting to remove last admin
+                if (!isAdmin && adminCount <= 1) {
+                    alert('Debe haber al menos un administrador en el sistema.');
+                    this.checked = true;
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/PreInducciones/Utilidades_PRE/Configuracion_PRE?handler=UpdateAdminStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({ userId, isAdmin })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Refresh the list to show updated admin counts
+                        loadAdminManagement();
+                    } else {
+                        alert('Error al actualizar el estado de administrador.');
+                        this.checked = !isAdmin;
+                    }
+                } catch (error) {
+                    console.error('Error updating admin status:', error);
+                    alert('Error al actualizar el estado de administrador.');
+                    this.checked = !isAdmin;
+                }
+            });
+        });
+        
+    } catch (error) {
+        console.error('Error loading users:', error);
+        container.innerHTML = '<div class="error-message">Error al cargar la lista de usuarios</div>';
+    }
+}
+        });
+    </script>
+</body>
